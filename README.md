@@ -108,8 +108,14 @@ automatically unless the (non-redistributable) World Cup THEME files are present
 
 ## Citation
 
-If you use `tpattern` in research, please cite the software (see
-[`CITATION.cff`](CITATION.cff)) and the method:
+If you use `tpattern` in research, please cite the software (a machine-readable
+version is in [`CITATION.cff`](CITATION.cff)):
+
+Callaway, A. (2026). *tpattern: open, auditable temporal & sequential analysis for
+sport and behaviour* (Version 0.1.0) [Computer software].
+https://github.com/ajcallaway/TPattern
+
+And the method:
 
 Magnusson, M. S. (2000). Discovering hidden time patterns in behavior: T-patterns
 and their detection. *Behavior Research Methods, Instruments, & Computers*, 32(1),
