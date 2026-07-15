@@ -8,22 +8,21 @@ companion to the [OpenTag.Studio](https://opentag.studio) tagging tool.
 
 ## Why it exists
 
-T-pattern analysis finds behaviourally meaningful structure that event counts and
-simple transition tables miss. The established tool, THEME, is powerful but
-closed, produces very large descriptive pattern sets, and — by its own manual's
-admission — needs a randomisation step to separate real patterns from chance that
-is rarely run. `tpattern`:
+T-pattern analysis finds behaviourally meaningful structure that event counts and 
+simple transition tables miss. It is most established through Magnusson's THEME
+software, the reference implementation. `tpattern` is an open, complementary
+implementation that reproduces THEME's detection and adds a reproducible chance
+model and clear reporting:
 
 - **reproduces** THEME's core detection (critical intervals, Nx/T baseline,
   completeness competition) — validated to the pattern for published datasets;
-- **validates** patterns against a surrogate null, reporting p-values **corrected
-  for repeated testing** (false-discovery rate and family-wise) — the step THEME
-  makes optional;
-- **is honest about concurrency** — events sharing a timestamp are handled as
-  co-occurrence, not spurious sequence;
-- **reports clearly** — the output THEME does poorly: tidy tables, effect sizes
-  with confidence intervals, purposeful figures, and clean **dendrograms** of the
-  detected patterns.
+**adds a chance model** — every pattern is tested against a surrogate null, with
+  p-values **corrected for repeated testing** (false-discovery rate and
+  family-wise);
+- **handles concurrency explicitly** — events sharing a timestamp are treated as
+  co-occurrence rather than sequence;
+- **reports clearly** — tidy tables, effect sizes with confidence intervals,
+  purposeful figures, and clean **dendrograms** of the detected patterns.
 
 ## Installation
 
