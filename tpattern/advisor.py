@@ -1,0 +1,155 @@
+"""
+Method advisor — inspect the data, recommend the choices, articulate the method.
+================================================================================
+
+The tool exposes exactly three *questions* (not tuning knobs): which null, whether
+to require a genuine lag, and which error-rate control. Rather than leave the user
+to guess (THEME's failing), the advisor measures the properties of THIS dataset
+that determine each choice, recommends one, and writes the sentence that justifies
+it — so the Methods section is generated from the data, not asserted.
+
+  1. Null (N1 rotation/shuffle vs N2 profile-preserving)
+     Driver: does each event type have its own marginal temporal profile?
+     - Measured by conditional-uniformity (KS vs Uniform of within-window
+       positions). If most types are non-uniform, marginal timing is real and
+       would masquerade as coupling under N1, so N2 is required. If types are
+       ~uniform, N1 and N2 coincide and the choice is moot.
+
+  2. Minimum lag (0 = concurrency allowed vs >=1 = genuine sequence only)
+     Driver: how often do consecutive events share a timestamp, and at what
+     resolution? A high same-unit co-occurrence fraction means within-unit order
+     is undefined, so directional patterns need a real lag.
+
+  3. Error control (FWER confirmatory vs FDR exploratory)
+     Driver: this is primarily the user's claim type, but sample size informs
+     power. We report both and recommend FDR for discovery, FWER for a small
+     number of strong confirmatory claims.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from .diagnostics import within_type_diagnostics, summarise
+
+
+@dataclass
+class Choice:
+    option: str
+    recommended: str
+    rationale: str
+    evidence: dict = field(default_factory=dict)
+
+
+@dataclass
+class Recommendation:
+    n_obs: int
+    n_events: int
+    choices: list[Choice]
+
+    def __str__(self) -> str:
+        lines = [f"Dataset: {self.n_obs} observations, {self.n_events} events\n"]
+        for c in self.choices:
+            lines.append(f"[{c.option}]  ->  {c.recommended}\n    {c.rationale}")
+        return "\n".join(lines)
+
+    def methods_text(self) -> str:
+        """A ready-to-adapt Methods paragraph, grounded in the measured values."""
+        return " ".join(c.rationale for c in self.choices)
+
+
+def _resolution_stats(observations) -> dict:
+    """Timestamp resolution and same-unit co-occurrence rate."""
+    min_gap = None
+    same = 0
+    total = 0
+    for o in observations:
+        ts = sorted(t for t, _ in o.events)
+        for i in range(len(ts) - 1):
+            total += 1
+            d = ts[i + 1] - ts[i]
+            if d == 0:
+                same += 1
+            elif min_gap is None or d < min_gap:
+                min_gap = d
+    return {
+        "min_nonzero_gap": min_gap,
+        "same_timestamp_frac": (same / total) if total else 0.0,
+        "n_consecutive": total,
+    }
+
+
+def recommend(observations, *, min_count: int = 15,
+              uniformity_alpha: float = 0.05) -> Recommendation:
+    """Inspect the data and recommend null, min_lag and error-control, with text."""
+    n_obs = len(observations)
+    n_events = sum(len(o.events) for o in observations)
+
+    # --- Null choice: marginal temporal structure? ---
+    diag = within_type_diagnostics(observations, min_count=min_count)
+    summ = summarise(diag, alpha=uniformity_alpha)
+    frac_nu = summ.get("frac_non_uniform", 0.0)
+    # illustrative extreme (type furthest from centred placement)
+    extreme = max(diag, key=lambda d: abs(d.mean_u - 0.5), default=None)
+    ex_txt = ""
+    if extreme is not None:
+        where = "late" if extreme.mean_u > 0.5 else "early"
+        ex_txt = (f" (e.g. {extreme.event} concentrated {where} in the sequence, "
+                  f"mean position {extreme.mean_u:.2f})")
+
+    if summ["n_types_tested"] and frac_nu > 0.5:
+        null_choice = Choice(
+            "Null", "N2 profile-preserving",
+            rationale=(f"{summ['n_non_uniform']} of {summ['n_types_tested']} event "
+                       f"types deviated from uniform temporal placement "
+                       f"(KS p<{uniformity_alpha}){ex_txt}, so the profile-preserving "
+                       f"null (N2) was used to isolate cross-event coupling from each "
+                       f"type's marginal timing; the rotation null (N1) is reported "
+                       f"alongside to quantify the marginal-timing contribution."),
+            evidence={"frac_non_uniform": frac_nu, **summ},
+        )
+    else:
+        null_choice = Choice(
+            "Null", "N1 rotation (N2 confirms)",
+            rationale=(f"Only {summ.get('n_non_uniform',0)} of "
+                       f"{summ.get('n_types_tested',0)} event types showed marginal "
+                       f"temporal structure, so the rotation (N1) and profile-preserving "
+                       f"(N2) nulls effectively coincide; N1 was used with N2 reported "
+                       f"to confirm equivalence."),
+            evidence={"frac_non_uniform": frac_nu, **summ},
+        )
+
+    # --- Minimum lag: resolution and co-occurrence ---
+    res = _resolution_stats(observations)
+    stf = res["same_timestamp_frac"]
+    gap = res["min_nonzero_gap"]
+    if stf > 0.10:
+        lag_choice = Choice(
+            "Minimum lag", "min_lag = 1 (require genuine lag)",
+            rationale=(f"{stf:.0%} of consecutive events shared a timestamp at the "
+                       f"data's resolution ({gap} time-units minimum gap), so order "
+                       f"within a unit is undefined; a genuine lag was required "
+                       f"(min_lag=1) and same-unit co-occurrences were tabulated "
+                       f"separately as concurrency rather than sequence."),
+            evidence=res,
+        )
+    else:
+        lag_choice = Choice(
+            "Minimum lag", "min_lag = 0 (concurrency negligible)",
+            rationale=(f"Only {stf:.0%} of consecutive events shared a timestamp, so "
+                       f"concurrency is negligible and no minimum lag was imposed."),
+            evidence=res,
+        )
+
+    # --- Error control ---
+    err_choice = Choice(
+        "Error control", "FDR primary, FWER reported",
+        rationale=(f"Across {n_obs} observations, pattern significance was calibrated "
+                   f"against the null and controlled by false-discovery rate "
+                   f"(Benjamini-Hochberg, q=0.05) for discovery, with family-wise "
+                   f"control (alpha=0.005) additionally reported for confirmatory claims."),
+        evidence={"n_obs": n_obs},
+    )
+
+    return Recommendation(n_obs=n_obs, n_events=n_events,
+                          choices=[null_choice, lag_choice, err_choice])

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tpattern"
+version = "0.1.0"
+description = "Open, auditable temporal & sequential pattern analysis (T-patterns) for sport and behaviour"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Andrew Callaway", email = "acallaway@bournemouth.ac.uk" },
+]
+keywords = ["t-pattern", "THEME", "temporal", "sequence", "sport", "behaviour", "notation analysis"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "numpy>=1.21",
+    "scipy>=1.7",
+    "matplotlib>=3.4",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/ajcallaway/TPattern"
+Repository = "https://github.com/ajcallaway/TPattern"
+"Tagging tool (OpenTag)" = "https://opentag.studio"
+
+[tool.setuptools]
+packages = ["tpattern"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

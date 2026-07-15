@@ -1,0 +1,286 @@
+"""
+The T-pattern detection engine.
+===============================
+
+Bottom-up, level by level (Magnusson, 2000):
+
+  Level 0  Build a "terminal" pattern for every event *type* (one leaf per type).
+           These are the univariate patterns.
+  Level 1  Test every ordered pair of event types (A, B) for a critical
+           interval. Each accepted link becomes a bivariate pattern (A B).
+  Level k  Treat every *retained* pattern as a symbol in its own right and test
+           it (on either side) against every terminal for a new critical
+           interval. Accepted links are one level deeper. Repeat until a level
+           adds nothing new.
+
+Three THEME options handled here:
+  * Exclude Frequent Event-Types (threshold 1.50): before any linking, drop event
+    types whose mean number of occurrences *per observation* exceeds the
+    threshold, so they cannot act as universal connectors in multi-event
+    patterns. NOTE: this affects pattern *construction* only. Univariate
+    patterns (Level 0) list the full event alphabet and are reported regardless
+    (the paper: "univariate counts ... are not subject to the frequent
+    event-type exclusion").
+  * Minimum Occurrence (3): a pattern is only kept if it occurs at least 3 times.
+  * Completeness competition: a shorter pattern is discarded when it never
+    occurs *outside* a longer detected pattern — i.e. all its occurrences are
+    absorbed by a more complete pattern, so it carries no independent
+    information. This both matches Magnusson's "completeness" pruning and keeps
+    the hierarchy from proliferating redundant fragments.
+"""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from dataclasses import dataclass
+
+from .ci import find_critical_interval
+from .io import Observation
+from .pattern import Instance, Pattern
+
+
+@dataclass
+class Config:
+    """THEME analysis settings (defaults = the paper's settings)."""
+
+    alpha: float = 0.005              # Significance Level
+    min_occurrence: int = 3           # Minimum Occurrence
+    max_edges: int | None = None      # cap candidate CI edges (dense-data speedup)
+    min_lag: int = 0                  # minimum A->B gap (ms). 0 = THEME behaviour
+    #                                   (simultaneous events allowed); 1 = require
+    #                                   a genuine temporal lag, so same-timestamp
+    #                                   co-occurrences are excluded and handled
+    #                                   separately as "simultaneity".
+    freq_exclude: float | None = 1.50  # auto exclude if mean/obs exceeds this
+    exclude_events: list[str] | None = None  # explicit exclusion list (overrides
+    #                                          the frequency rule when provided;
+    #                                          [] disables exclusion entirely)
+    include_univariate: bool = True   # Univariate Patterns = Include
+    completeness: bool = True         # apply completeness competition
+    lumping_factor: float | None = None  # THEME Lumping Factor. When (A B) forms
+    #   with forward conditional prob N_AB/N_A > this, B is removed from the rest
+    #   of the search (it almost always follows A, so the pair is treated as a
+    #   unit); likewise A if N_AB/N_B exceeds it. Controls combinatorial blow-up
+    #   in dense/highly-structured data. None = off (default). Typical: 0.7-1.0.
+    min_samples_frac: float | None = None  # THEME "Minimum % of Samples": a pattern
+    #                                        must occur in at least this fraction of
+    #                                        observations. Anti-monotone (a longer
+    #                                        pattern can only span fewer observations),
+    #                                        so it is pruned during the search.
+    max_level: int = 8                # safety cap on hierarchy depth
+
+    def is_excluded(self, event: str, mean_per_obs: float) -> bool:
+        """Decide whether an event type is barred from *building* patterns.
+
+        Manual list (if given) takes precedence over the automatic frequency
+        rule — this mirrors THEME, where the analyst can override, and lets us
+        reproduce the paper's Saved analysis by keeping Interception in.
+        """
+        if self.exclude_events is not None:
+            return event in self.exclude_events
+        if self.freq_exclude is None:
+            return False
+        return mean_per_obs > self.freq_exclude
+
+
+def _group_pair(a: Pattern, b: Pattern) -> dict[int, tuple[list, list]]:
+    """Group A- and B-instances by observation id, each sub-list time-sorted."""
+    idx: dict[int, tuple[list, list]] = defaultdict(lambda: ([], []))
+    for inst in a.instances:
+        idx[inst.obs][0].append(inst)
+    for inst in b.instances:
+        idx[inst.obs][1].append(inst)
+    for a_list, b_list in idx.values():
+        a_list.sort(key=lambda x: x.end)
+        b_list.sort(key=lambda x: x.start)
+    return idx
+
+
+class Engine:
+    """Runs a full T-pattern detection on one sample of observations."""
+
+    def __init__(self, observations: list[Observation], config: Config | None = None):
+        self.obs = observations
+        self.cfg = config or Config()
+        self.total_time = sum(max(o.T, 1) for o in observations)
+        self.univariate: list[Pattern] = []    # all event types (for output)
+        self.terminals: list[Pattern] = []      # constructable terminals only
+        self.excluded: list[str] = []
+
+    # ------------------------------------------------------------- level 0
+    def build_terminals(self) -> list[Pattern]:
+        """Create terminal patterns.
+
+        `univariate` = one per distinct event type (the full alphabet, reported
+        as Level-0 patterns). `terminals` = the subset usable to *build*
+        multi-event patterns (survive the frequent-event exclusion and reach the
+        minimum occurrence).
+        """
+        by_type: dict[str, list[Instance]] = defaultdict(list)
+        token = 0
+        for i, o in enumerate(self.obs):
+            for t, ev in o.events:
+                # Every raw event occurrence gets a globally-unique token id so
+                # that composite patterns can never reuse the same event twice.
+                by_type[ev].append(Instance(obs=i, start=t, end=t, tokens=frozenset((token,))))
+                token += 1
+
+        n_obs = len(self.obs)
+        self.univariate, self.terminals, self.excluded = [], [], []
+        for ev, insts in sorted(by_type.items()):
+            term = Pattern(event=ev, instances=insts)
+            self.univariate.append(term)
+            if self.cfg.is_excluded(ev, len(insts) / n_obs):
+                self.excluded.append(ev)
+                continue
+            if len(insts) < self.cfg.min_occurrence:
+                continue
+            self.terminals.append(term)
+        return self.terminals
+
+    # ------------------------------------------------------- one link test
+    def _link(self, a: Pattern, b: Pattern) -> Pattern | None:
+        """Test A -> B; return the composite pattern if a CI is significant."""
+        res = find_critical_interval(
+            a, b, _group_pair(a, b), self.total_time,
+            alpha=self.cfg.alpha, min_occurrence=self.cfg.min_occurrence,
+            min_lag=self.cfg.min_lag, max_edges=self.cfg.max_edges,
+        )
+        if res is None:
+            return None
+        return Pattern(
+            left=a, right=b, ci=(res.d1, res.d2),
+            p_value=res.p_value, instances=res.instances,
+        )
+
+    # -------------------------------------------- completeness competition
+    @staticmethod
+    def _covered_by(sub: Pattern, sup: Pattern) -> bool:
+        """True iff `sub` is a deterministic sub-part of `sup` — exact test.
+
+        Every occurrence carries the set of raw event tokens it is built from.
+        `sub` is absorbed by `sup` iff *every* occurrence of sub is built from a
+        subset of the tokens of some occurrence of sup, i.e. sub's events are
+        always a subset of sup's events. Then sub never occurs independently and
+        carries no information beyond sup — an exact, information-based redundancy
+        criterion, not a span-overlap heuristic.
+
+        Safety note for the frontier pruning: if sub is absorbed, then every A→B
+        that forms sub is already followed (inside sup) by the rest of sup, so
+        there is no free sub occurrence to extend differently — dropping it from
+        the search frontier cannot lose any extension.
+        """
+        sup_by_obs: dict[int, list[frozenset]] = defaultdict(list)
+        for ins in sup.instances:
+            sup_by_obs[ins.obs].append(ins.tokens)
+        for ins in sub.instances:
+            toks = sup_by_obs.get(ins.obs)
+            if not toks:
+                return False
+            st = ins.tokens
+            if not any(st <= t for t in toks):
+                return False
+        return True
+
+    def _completeness_competition(self, patterns: list[Pattern]) -> list[Pattern]:
+        """Drop patterns whose every occurrence is absorbed by a longer one."""
+        composites = [p for p in patterns if p.level >= 1]
+        keep = []
+        for p in composites:
+            absorbed = False
+            for q in composites:
+                if q is p or q.length <= p.length:
+                    continue
+                if self._covered_by(p, q):
+                    absorbed = True
+                    break
+            if not absorbed:
+                keep.append(p)
+        return keep
+
+    # --------------------------------------------------------- full search
+    def detect(self, verbose: bool = False) -> list[Pattern]:
+        """Run the complete bottom-up detection and return all patterns.
+
+        Completeness competition is applied *per level*: a newly formed pattern
+        that is already absorbed by a longer pattern is not carried into the next
+        round, which both matches THEME's during-construction pruning and stops
+        redundant fragments (e.g. loop repeats among frequent passes) from
+        seeding an ever-growing frontier.
+        """
+        if not self.terminals:
+            self.build_terminals()
+
+        # THEME "Minimum % of Samples": minimum number of distinct observations a
+        # pattern must span. Anti-monotone, so it prunes the search frontier.
+        min_bouts = 0
+        if self.cfg.min_samples_frac:
+            import math
+            min_bouts = math.ceil(self.cfg.min_samples_frac * len(self.obs))
+
+        # Cache each terminal's observation set for the bout co-occurrence prune.
+        term_obs = {id(t): {i.obs for i in t.instances} for t in self.terminals}
+        lump = self.cfg.lumping_factor
+        eliminated: set[str] = set()        # terminal event names removed by lumping
+
+        composites: list[Pattern] = []
+        seen: set[str] = set()
+
+        frontier: list[Pattern] = list(self.terminals)  # patterns to extend
+        for level in range(self.cfg.max_level):
+            new: list[Pattern] = []
+            for p in frontier:
+                p_obs = {i.obs for i in p.instances}
+                for term in self.terminals:
+                    if term.event in eliminated:
+                        continue
+                    # A->B can only occur in observations where both occur, so if
+                    # they co-occur in too few, skip the expensive CI search entirely.
+                    if min_bouts and len(p_obs & term_obs[id(term)]) < min_bouts:
+                        continue
+                    for a, b in ((p, term), (term, p)):
+                        if a is b:
+                            continue
+                        combo = self._link(a, b)
+                        if combo is None:
+                            continue
+                        if min_bouts and len({i.obs for i in combo.instances}) < min_bouts:
+                            continue          # too few observations; prune (anti-monotone)
+                        sig = combo.signature()
+                        if sig in seen:
+                            continue
+                        seen.add(sig)
+                        new.append(combo)
+                        # Lumping: if the pair is near-deterministic, drop the
+                        # predictable component from the rest of the search.
+                        if lump is not None:
+                            if a.N and combo.N / a.N > lump and b.is_terminal:
+                                eliminated.add(b.event)
+                            if b.N and combo.N / b.N > lump and a.is_terminal:
+                                eliminated.add(a.event)
+            if not new:
+                break
+
+            composites.extend(new)
+            if self.cfg.completeness:
+                # Keep only new patterns that are NOT already absorbed by a
+                # longer retained pattern; those seed the next level.
+                retained = set(id(p) for p in self._completeness_competition(composites))
+                frontier = [p for p in new if id(p) in retained]
+            else:
+                frontier = new
+            if verbose:
+                print(f"  level {level + 1}: +{len(new)} new, "
+                      f"{len(frontier)} carried forward "
+                      f"(maxN={max((p.N for p in new), default=0)})")
+            if not frontier:
+                break
+
+        if self.cfg.completeness:
+            composites = self._completeness_competition(composites)
+
+        result: list[Pattern] = []
+        if self.cfg.include_univariate:
+            result.extend(self.univariate)
+        result.extend(composites)
+        return result

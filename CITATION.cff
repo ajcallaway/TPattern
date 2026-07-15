@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "tpattern: open, auditable temporal & sequential analysis for sport and behaviour"
+abstract: >-
+  An open-source Python reimplementation of Magnusson's THEME T-pattern detection,
+  adding a reproducible surrogate-null chance model with correction for repeated
+  testing, explicit handling of same-timestamp co-occurrence, and clear tabular and
+  graphical reporting.
+type: software
+authors:
+  - family-names: Callaway
+    given-names: Andrew
+    affiliation: "Bournemouth University"
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/ajcallaway/TPattern"
+keywords:
+  - T-pattern analysis
+  - THEME
+  - temporal patterns
+  - sports performance analysis
+  - reproducibility
+references:
+  - type: article
+    authors:
+      - family-names: Magnusson
+        given-names: Magnus S.
+    title: "Discovering hidden time patterns in behavior: T-patterns and their detection"
+    journal: "Behavior Research Methods, Instruments, & Computers"
+    year: 2000
+    volume: 32
+    issue: 1
+    start: 93
+    end: 110
+    doi: 10.3758/BF03200792
