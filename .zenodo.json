@@ -1,0 +1,28 @@
+{
+  "upload_type": "software",
+  "title": "tpattern: open, auditable temporal & sequential analysis for sport and behaviour",
+  "description": "An open-source Python reimplementation of Magnusson's THEME T-pattern detection, adding a reproducible surrogate-null chance model with correction for repeated testing (false-discovery rate and family-wise), explicit handling of same-timestamp co-occurrence, and clear tabular and graphical reporting (tables, effect sizes, pattern dendrograms).",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Callaway, Andrew",
+      "affiliation": "Bournemouth University"
+    }
+  ],
+  "keywords": [
+    "T-pattern analysis",
+    "THEME",
+    "temporal patterns",
+    "sequential analysis",
+    "sports performance analysis",
+    "reproducibility"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.3758/BF03200792",
+      "relation": "cites",
+      "scheme": "doi"
+    }
+  ]
+}
