@@ -13,6 +13,7 @@ It is a flat table, **one row per event**:
 | `start` | **yes** | event start time, numeric (seconds or any consistent unit) |
 | `end` | no | event end time; or give `duration` instead |
 | `duration` | no | event duration (used for state durations / precision) |
+| `obs_start`, `obs_end` | no | the **observation window** (same value on every row of an observation) — see below |
 | *label columns* | no | any extra columns = descriptor dimensions (role, actor, outcome…) |
 | *meta columns* | no | session-level descriptors (round, date, group label…) |
 
@@ -47,6 +48,23 @@ Supplying these (as label/attribute columns) turns recurring analyses on:
 | `role` (Initiator / Reaction / Follow-up / Outcome) | phrase / structured-sequence analysis |
 | `outcome` (explicit score / no-score codes) | outcome-linkage + scoring base rate |
 | `group` (session-level, e.g. winner/loser, goal/non-goal) | group contrast |
+
+## The observation window (`obs_start` / `obs_end`)
+
+Give these whenever the analysis unit has **real bounds that extend beyond its first
+and last event** — a possession, rally or bout usually does (the whistle goes before
+the first action and after the last).
+
+This is not cosmetic. The window length `T = obs_end - obs_start` is the denominator
+of the NX/T baseline probability, so every significance test depends on it. If the
+window is left out, it falls back to the first/last event time, which shortens T and
+shifts every baseline. In the shipped World Cup goals sample the difference is
+1,064,634 ms (true) versus 1,064,358 ms (inferred) — enough to move borderline
+patterns. Store it explicitly if you have it.
+
+```python
+obs = read_table("events.csv", obs_start="obs_start", obs_end="obs_end", time_unit="ms")
+```
 
 ## Notes
 

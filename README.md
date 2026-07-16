@@ -93,11 +93,27 @@ export is analysis-ready, and that guidance applies directly to `tpattern`
 (`CODING_GUIDE.md` is the short bridge). Together they form a complete, open
 tag → analysis pipeline.
 
+## Reproducing the published results
+
+The derived 2022 World Cup event sequences ship in [`data/`](data/), so the
+published analyses reproduce from this repository alone:
+
+```bash
+python examples/reproduce_worldcup.py              # concordance, exclusion, concurrency (~5 s)
+python examples/reproduce_worldcup.py --calibrate  # also the surrogate null (~10 min)
+```
+
+This regenerates the tpattern-vs-THEME pattern counts by level, the interception
+exclusion divergence, the co-occurrence-vs-sequence analysis, and how many patterns
+survive the surrogate null. All seeded and deterministic. See
+[`data/README.md`](data/README.md) for provenance and how the data was derived.
+
 ## Documentation
 
 - [`SCHEMA.md`](SCHEMA.md) — the input data structure (what your export must contain).
 - [`CODING_GUIDE.md`](CODING_GUIDE.md) — how to set up a coding window to produce it.
-- [`examples/`](examples/) — a runnable quickstart and the World Cup reproduction script.
+- [`data/`](data/) — the derived World Cup sequences, in the canonical format.
+- [`examples/`](examples/) — a runnable quickstart and the reproduction script.
 
 ## Tests
 
@@ -106,8 +122,9 @@ pip install -e .[test]
 pytest -q
 ```
 
-The synthetic ground-truth tests run anywhere. The THEME reproduction test skips
-automatically unless the (non-redistributable) World Cup THEME files are present.
+Both the synthetic ground-truth tests and the THEME reproduction tests run
+everywhere — the latter check the detector still reproduces THEME's published
+occurrence counts to the exact N.
 
 ## Citation
 
