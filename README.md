@@ -16,7 +16,7 @@ model and clear reporting:
 
 - **reproduces** THEME's core detection (critical intervals, Nx/T baseline,
   completeness competition) — validated to the pattern for published datasets;
-**adds a chance model** — every pattern is tested against a surrogate null, with
+- **adds a chance model** — every pattern is tested against a surrogate null, with
   p-values **corrected for repeated testing** (false-discovery rate and
   family-wise);
 - **handles concurrency explicitly** — events sharing a timestamp are treated as
