@@ -1,5 +1,8 @@
 # tpattern — open, auditable temporal & sequential analysis for sport and behaviour
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21397543.svg)](https://doi.org/10.5281/zenodo.21397543)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 `tpattern` detects recurring temporal patterns (T-patterns; Magnusson, 2000) in
 timed event data, validates them properly against chance, and produces clean,
 publication-ready output — tables, figures and pattern dendrograms. It is a free,
@@ -112,8 +115,11 @@ If you use `tpattern` in research, please cite the software (a machine-readable
 version is in [`CITATION.cff`](CITATION.cff)):
 
 Callaway, A. (2026). *tpattern: open, auditable temporal & sequential analysis for
-sport and behaviour* (Version 0.1.0) [Computer software].
-https://github.com/ajcallaway/TPattern
+sport and behaviour* (Version 0.1.0) [Computer software]. Zenodo.
+https://doi.org/10.5281/zenodo.21397544
+
+To cite the software generally (any version), use the concept DOI:
+https://doi.org/10.5281/zenodo.21397543
 
 And the method:
 
