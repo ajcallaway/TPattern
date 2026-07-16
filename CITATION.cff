@@ -12,6 +12,7 @@ authors:
     given-names: Andrew
     affiliation: "Bournemouth University"
 version: 0.1.0
+date-released: 2026-07-16
 license: MIT
 repository-code: "https://github.com/ajcallaway/TPattern"
 keywords:
