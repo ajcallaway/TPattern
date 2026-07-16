@@ -132,11 +132,11 @@ If you use `tpattern` in research, please cite the software (a machine-readable
 version is in [`CITATION.cff`](CITATION.cff)):
 
 Callaway, A. (2026). *tpattern: open, auditable temporal & sequential analysis for
-sport and behaviour* (Version 0.1.0) [Computer software]. Zenodo.
-https://doi.org/10.5281/zenodo.21397544
-
-To cite the software generally (any version), use the concept DOI:
+sport and behaviour* [Computer software]. Zenodo.
 https://doi.org/10.5281/zenodo.21397543
+
+This DOI is permanent and always resolves to the current release. To pin a specific
+version instead, use that release's own DOI, listed on the Zenodo record.
 
 And the method:
 
