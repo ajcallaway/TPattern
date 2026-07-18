@@ -53,6 +53,28 @@ def load(group):
                       obs_end="obs_end", time_unit="ms")
 
 
+def report_settings():
+    """State the two settings regimes explicitly, so the comparison is transparent:
+    (1) the THEME-matched parameters used for the reproduction (Section 3.1), and
+    (2) the data-driven choices the tool recommends for the findings (Sections
+    3.3-3.4), which THEME cannot perform."""
+    from tpattern import methods_text, recommend
+    print("=" * 70)
+    print("0. METHOD & SETTINGS")
+    print("=" * 70)
+    print("Regime 1 — reproduction vs THEME (Section 3.1): the parameters below are")
+    print("matched exactly to the THEME run, so the comparison is like-for-like.\n")
+    print("  " + methods_text(Config(), cite=False).replace(". ", ".\n  "))
+    print("\nRegime 2 — the findings (Sections 3.3-3.4) add a surrogate null, a genuine-")
+    print("lag requirement and multiplicity control that THEME does not provide. These")
+    print("are NOT hand-picked: the tool inspects each group and recommends them from")
+    print("the data. Its recommendation for the Goals sample:\n")
+    rec = recommend(load("Goals"))
+    for c in rec.choices:
+        print(f"  [{c.option}] -> {c.recommended}")
+    print()
+
+
 def counts_by_level(pats):
     lv = Counter(p.level for p in pats)
     return (len(pats), lv.get(0, 0), lv.get(1, 0),
@@ -65,6 +87,8 @@ def main():
                     help="also run the surrogate null (slow, ~10 min)")
     ap.add_argument("--B", type=int, default=200)
     args = ap.parse_args()
+
+    report_settings()
 
     print("=" * 70)
     print("1. CONCORDANCE — pattern counts, tpattern vs THEME 8 (same parameters)")
