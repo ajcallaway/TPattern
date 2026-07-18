@@ -125,17 +125,76 @@ def main():
     print("     cross-shot links are genuine sequence.")
 
     if args.calibrate:
-        print("\n" + "=" * 70)
-        print(f"4. CALIBRATION — profile-preserving null, B={args.B}, FDR q<=.05")
-        print("=" * 70)
-        print(f"{'group':13}{'detected(L>=1)':>15}{'FDR keep':>10}{'FWER keep':>11}")
-        for g in GROUPS:
-            res = calibrate(load(g), Config(), null="profile", B=args.B,
-                            alpha=.005, q_target=.05, seed=SEED)
-            print(f"{g:13}{len(res.real):>15}{len(res.kept('fdr')):>10}"
-                  f"{len(res.kept('fwer')):>11}")
-        print("\nNote: at B=200 the Monte-Carlo p-value floor is ~1/(B+1)=.005, so Holm")
-        print("FWER is resolution-limited; FDR is the practical control. Raise B for FWER.")
+        reproduce_calibration(args.B)
+
+
+def reproduce_calibration(B):
+    """Regenerate every calibration number in the paper (Sections 3.2-3.4,
+    Tables 2 and 3). Slow (~15-20 min): runs the surrogate null many times."""
+    from tpattern.synthetic import SyntheticSpec, make_dataset
+
+    # ---- Table 2: synthetic ground truth (Section 3.2) ----
+    print("\n" + "=" * 70)
+    print("TABLE 2 — ground-truth validation on synthetic data (profile null,")
+    print("          B=200, genuine-lag detection)")
+    print("=" * 70)
+    null = make_dataset(SyntheticSpec(n_seq=250, plant_fraction=0.0,
+                                      bg_rate=2.5, seed=3))[0]
+    rn = calibrate(null, Config(min_lag=1), null="profile", B=200, q_target=.05, seed=1)
+    print(f"  null data (no coupling): FDR survivors={len(rn.kept('fdr'))}, "
+          f"FWER survivors={len(rn.kept('fwer'))}   (both should be 0)")
+    print("  planted A->B recovery:")
+    for frac in (0.06, 0.10, 0.15, 0.20):
+        obs, truth = make_dataset(SyntheticSpec(
+            n_seq=300, planted=[("A", 0), ("B", 1500)], plant_fraction=frac,
+            jitter=200, seed=7))
+        r = calibrate(obs, Config(min_lag=1), null="profile", B=200, q_target=.05, seed=2)
+        got = {c.pattern.signature(): c for c in r.real}.get(truth)
+        fdr = "yes" if (got and got in r.kept("fdr")) else "no"
+        fwer = "yes" if (got and got in r.kept("fwer")) else "no"
+        print(f"    plant N~{int(round(300*frac)):>3}: FDR-recovered={fdr:4} "
+              f"FWER-recovered={fwer}")
+    print("  => FDR recovers from N~18, FWER from N~30; 0 false positives on null.")
+
+    # ---- Section 3.3: THEME-faithful calibration (all events, min_lag=0) ----
+    print("\n" + "=" * 70)
+    print(f"SECTION 3.3 — surrogate calibration, all events (profile null, B={B})")
+    print("=" * 70)
+    print(f"{'group':13}{'detected(L>=1)':>15}{'FDR keep':>10}{'FWER keep':>11}")
+    for g in GROUPS:
+        res = calibrate(load(g), Config(), null="profile", B=B,
+                        alpha=.005, q_target=.05, seed=SEED)
+        print(f"{g:13}{len(res.real):>15}{len(res.kept('fdr')):>10}"
+              f"{len(res.kept('fwer')):>11}")
+    print("  => goals 10/23, non-goals 83/154, defensive recovery 32/69 survive FDR.")
+
+    # ---- Section 3.3 null-choice: rotation (N1) vs profile (N2), Goals, B=2000 ----
+    print("\n" + "=" * 70)
+    print("SECTION 3.3 — null choice (Goals, genuine lag, B=2000)")
+    print("=" * 70)
+    goals = load("Goals")
+    for label, nm in [("rotation (N1)", "rotation"), ("profile  (N2)", "profile")]:
+        r = calibrate(goals, Config(min_lag=1), null=nm, B=2000,
+                      alpha=.005, q_target=.05, seed=SEED)
+        surv = sorted(r.kept("fdr"), key=lambda c: c.p_emp)
+        names = "; ".join(f"{c.pattern} (q={c.fdr_q:.3f})" for c in surv)
+        print(f"  {label}: {len(surv)} survive FDR -> {names}")
+    print("  => rotation credits 3, profile credits 1; cross->shot_goal survives both.")
+
+    # ---- Table 3: genuine-lag calibration (min_lag=1) ----
+    print("\n" + "=" * 70)
+    print("TABLE 3 — genuine-lag detection and calibration (min_lag=1, profile null)")
+    print("=" * 70)
+    for g, Bg in [("Goals", 2000), ("NonGoals", B), ("DefRecovery", B)]:
+        r = calibrate(load(g), Config(min_lag=1), null="profile", B=Bg,
+                      alpha=.005, q_target=.05, seed=SEED)
+        surv = sorted(r.kept("fdr"), key=lambda c: -c.N)
+        print(f"  {g:13} (B={Bg}): {len(r.real)} genuine-lag patterns detected, "
+              f"{len(surv)} survive FDR")
+        for c in surv[:4]:
+            print(f"      N={c.N:>3} q={c.fdr_q:.3f}  {c.pattern}")
+    print("  => Goals 1 (cross->shot_goal, q=.006); NonGoals 19 (cross-delivery family);")
+    print("     DefRecovery power-limited. Note: FWER needs B in the thousands (Section 4).")
 
 
 if __name__ == "__main__":
