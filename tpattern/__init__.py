@@ -19,7 +19,7 @@ from .methods import methods_text
 from .guided import run_analysis, launch
 from .contrast import group_contrast, contrast_items
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "Observation", "read_observation", "read_sample", "read_table",

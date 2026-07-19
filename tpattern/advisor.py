@@ -191,5 +191,51 @@ def recommend(observations, *, min_count: int = 15,
         evidence={"n_obs": n_obs},
     )
 
+    # --- Frequent-event exclusion (a detection-time choice; matches Config.freq_exclude) ---
+    # A near-ubiquitous event type links to almost everything, so it acts as a universal
+    # connector and inflates the pattern hierarchy. The default excludes any type whose mean
+    # occurrences per observation exceed 1.50 from *building* patterns (they stay in Level 0).
+    # This is consequential, so the advisor surfaces it rather than leaving it a silent default.
+    threshold = 1.50
+    totals: dict[str, int] = {}
+    for o in observations:
+        for _, ev in o.events:
+            totals[ev] = totals.get(ev, 0) + 1
+    means = {ev: totals[ev] / n_obs for ev in totals} if n_obs else {}
+    frequent = sorted((ev for ev, m in means.items() if m > threshold),
+                      key=lambda e: -means[e])
+    if frequent:
+        lst = ", ".join(f"{e} ({means[e]:.2f}/obs)" for e in frequent)
+        freq_choice = Choice(
+            "Frequent-event exclusion",
+            f"exclude {len(frequent)} type(s) from pattern-building (default)",
+            rationale=(f"{len(frequent)} event type(s) occur more than {threshold} times per "
+                       f"observation on average and are excluded by default from building "
+                       f"multi-event patterns (they remain in the Level-0 univariate set): "
+                       f"{lst}. Excluding a near-ubiquitous event stops it acting as a universal "
+                       f"connector and inflating the hierarchy; retaining it "
+                       f"(Config(exclude_events=[]), or a higher freq_exclude) keeps its "
+                       f"connector patterns at the cost of combinatorial growth. Because this "
+                       f"materially changes the pattern set, it is reported here rather than "
+                       f"applied silently."),
+            plain=("<b>Very common events are set aside from pattern-building.</b> An event that "
+                   "happens many times in almost every sequence (here: " + ", ".join(frequent) +
+                   ") links to nearly everything, so leaving it in would flood the results with "
+                   "patterns that are really just 'this common event, then anything'. By default "
+                   "we keep such events in the counts but not in the built patterns. <i>Why it "
+                   "matters:</i> it keeps the patterns meaningful; if that event is central to "
+                   "your question you can choose to keep it in."),
+            evidence={"threshold": threshold, "frequent": {e: means[e] for e in frequent}},
+        )
+    else:
+        freq_choice = Choice(
+            "Frequent-event exclusion", "none needed",
+            rationale=(f"No event type exceeds {threshold} occurrences per observation on "
+                       f"average, so none is excluded from pattern-building."),
+            plain=("No single event is common enough to swamp the patterns, so every event type "
+                   "is kept in the analysis."),
+            evidence={"threshold": threshold, "frequent": {}},
+        )
+
     return Recommendation(n_obs=n_obs, n_events=n_events,
-                          choices=[null_choice, lag_choice, err_choice])
+                          choices=[freq_choice, null_choice, lag_choice, err_choice])
