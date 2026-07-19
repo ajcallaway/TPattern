@@ -6,6 +6,8 @@ behavior: T-patterns and their detection. Behavior Research Methods,
 Instruments, & Computers, 32(1), 93-110.
 """
 
+__version__ = "0.1.2"   # defined before submodule imports (methods.py reads it)
+
 from .io import Observation, read_observation, read_sample, read_table
 from .pattern import Instance, Pattern
 from .ci import find_critical_interval, CIResult
@@ -18,8 +20,6 @@ from .advisor import recommend
 from .methods import methods_text
 from .guided import run_analysis, launch
 from .contrast import group_contrast, contrast_items
-
-__version__ = "0.1.2"
 
 __all__ = [
     "Observation", "read_observation", "read_sample", "read_table",

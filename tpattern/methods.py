@@ -16,7 +16,7 @@ operational definition, generated from the actual `Config` that was run.
 
 from __future__ import annotations
 
-VERSION = "0.1.0"
+from . import __version__ as VERSION   # single source of truth (pyproject/__init__)
 CONCEPT_DOI = "10.5281/zenodo.21397543"
 
 
