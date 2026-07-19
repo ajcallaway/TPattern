@@ -10,3 +10,4 @@ venv/
 quickstart_out/
 report_out/
 *_out/
+*.docx

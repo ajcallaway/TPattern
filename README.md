@@ -39,7 +39,12 @@ model and clear reporting:
 
 ## Installation
 
-From source (until published on PyPI):
+```bash
+pip install tpattern
+```
+
+Add the guided-wizard extras with `pip install tpattern[gui]`. To work from source
+instead (for development or to run the reproduction scripts and shipped data):
 
 ```bash
 git clone https://github.com/ajcallaway/TPattern.git
