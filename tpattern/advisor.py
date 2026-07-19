@@ -237,5 +237,41 @@ def recommend(observations, *, min_count: int = 15,
             evidence={"threshold": threshold, "frequent": {}},
         )
 
+    # --- Minimum occurrence (detection floor; matches Config.min_occurrence) ---
+    min_occ_choice = Choice(
+        "Minimum occurrence", "3 (the field floor)",
+        rationale=("A pattern is kept only if it recurs at least this many times (default 3, the "
+                   "T-pattern convention); below three occurrences the occurrence-based surrogate "
+                   "test is too coarse to calibrate. Impact of raising it: fewer but "
+                   "better-supported patterns — it removes the near-threshold tail (which "
+                   "calibration discards anyway) and shrinks the multiple-comparison family, at "
+                   "the cost of missing genuinely rare structure. Lowering it below three is not "
+                   "recommended."),
+        plain=("<b>How many times a chain must repeat to count.</b> The default is three. "
+               "<i>Raise it</i> to report only patterns that recur often and drop rare, borderline "
+               "ones; <i>lowering</i> is not advised — two or three occurrences is already the "
+               "smallest number the chance test can judge."),
+        evidence={"min_occurrence": 3, "n_obs": n_obs},
+    )
+
+    # --- Number of surrogates B (Monte-Carlo resolution; matches calibrate's B) ---
+    B_choice = Choice(
+        "Number of surrogates (B)", "200 to screen; thousands to confirm one pattern",
+        rationale=("The Monte-Carlo empirical p-value cannot fall below 1/(B+1), so B sets the "
+                   "finest significance any single pattern can reach. B=200 is ample for "
+                   "false-discovery screening; a family-wise confirmatory claim needs 1/(B+1) "
+                   "below the family threshold alpha/m — i.e. B greater than m/alpha — which for a "
+                   "typical pattern family is in the thousands. Impact of raising B: a lower "
+                   "p-floor and a smoother empirical p, at a runtime cost that grows linearly in "
+                   "B; too small a B silently caps significance and can leave a real pattern "
+                   "unconfirmable."),
+        plain=("<b>How many reshuffled datasets to test against.</b> More surrogates give a finer, "
+               "more trustworthy p-value but are proportionally slower. <i>Use about 200</i> to "
+               "screen many patterns; <i>raise into the thousands</i> to confirm one specific "
+               "pattern, because the smallest possible p-value is 1 divided by (B+1)."),
+        evidence={"floor_at_200": 1/201, "floor_at_2000": 1/2001},
+    )
+
     return Recommendation(n_obs=n_obs, n_events=n_events,
-                          choices=[freq_choice, null_choice, lag_choice, err_choice])
+                          choices=[freq_choice, min_occ_choice, null_choice, lag_choice,
+                                   err_choice, B_choice])

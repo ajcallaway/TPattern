@@ -134,10 +134,16 @@ def calibrate(observations, config: Config | None = None, *,
         "rotation"/"shuffle" are THEME-style nulls.
     B : int
         Number of surrogate datasets. The empirical p-value cannot fall below
-        1/(B+1), so family-wise (FWER) claims need B in the thousands; FDR is fine
-        at B=200.
+        1/(B+1), so family-wise (FWER) claims need B > m/alpha (m = patterns tested,
+        typically thousands); FDR is fine at B=200. Impact: too small silently caps
+        significance — a genuine pattern cannot clear the correction floor; larger B
+        gives a finer p at a runtime cost linear in B.
     alpha, q_target : float
         Family-wise level (Holm) and false-discovery target (Benjamini-Hochberg).
+        Impact: lower q_target → fewer, safer FDR survivors; lower alpha → very few
+        confirmatory FWER patterns (raise alpha to 0.05 for the conventional bar).
+        FDR flags more (a few flukes) and is for screening; FWER flags fewer, very
+        safely, and is for a single confirmatory claim.
     seed : int
         Fixes the surrogate draw, so results are reproducible.
 

@@ -42,17 +42,44 @@ from .pattern import Instance, Pattern
 @dataclass
 class Config:
     """Detection settings. The defaults reproduce THEME's parameters, so most users
-    change only a couple of things:
+    change only a couple of things. Every field below is user-editable; each carries
+    a mathematical reason to change it and a consequence if you do — stated here and,
+    for the data-driven ones, advised from your data by ``advisor.recommend``.
+
+    Data-driven (let ``advisor.recommend(observations)`` set these, with reasons):
 
     * ``min_lag`` — set to 1 on frame-coded data (video timestamps), where events
       sharing a timestamp are co-occurrence, not sequence. Default 0 = THEME's
-      behaviour (co-timing allowed).
-    * ``freq_exclude`` — the frequent-event exclusion (mean occurrences per
-      observation above which a type is barred from building patterns).
+      behaviour. Impact: at 0, co-timed events read as directional sequences
+      (Δt = 0 has no defined order → spurious patterns); at 1 they are reported as
+      co-occurrence instead.
+    * ``freq_exclude`` — mean occurrences per observation above which a type is
+      barred from *building* patterns. Impact: raise/disable to keep a near-ubiquitous
+      connector (risking combinatorial growth of the hierarchy); lower to exclude more
+      types. The excluded type is still counted at Level 0.
+    * ``min_occurrence`` — fewest times a chain must recur to be kept. Impact: below
+      ~3 the occurrence test is too coarse to calibrate; raise it to drop the rare,
+      near-threshold tail and shrink the multiple-comparison family.
 
-    Not sure what to pick? ``advisor.recommend(observations)`` inspects the data and
-    suggests ``min_lag`` (and the null / error control used at ``calibrate``), with
-    the reasoning. Everything else can be left at its default.
+    Documented defaults (sensible as-is; change only with a specific reason):
+
+    * ``alpha`` — threshold on the critical-interval binomial-tail p that accepts a
+      time window. Impact: lower → tighter, fewer windows; higher → more candidate
+      structure. Final significance comes from ``calibrate``, so this mainly ranks
+      strength, not truth.
+    * ``lumping_factor`` — treat B as part of A (and drop it from further search)
+      when the forward conditional prob N_AB/N_A exceeds this. Impact: set 0.7–1.0 on
+      dense data to bound combinatorial blow-up; None (default) keeps every pair
+      separate.
+    * ``min_samples_frac`` — a pattern must occur in at least this fraction of
+      observations (anti-monotone support; pruned during the search). Impact: set
+      (e.g. 0.1) to require patterns be widespread rather than one-offs.
+    * ``exclude_events`` — explicit include/exclude list; overrides the frequency
+      rule. Impact: force-keep a central event or force-drop a nuisance one by hand;
+      ``[]`` disables exclusion entirely.
+
+    The null and the error-rate control (FDR q-target, family-wise α) are set at
+    ``calibrate`` — see its docstring for their maths and impact.
     """
 
     alpha: float = 0.005              # Significance Level

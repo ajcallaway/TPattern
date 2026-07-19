@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tpattern"
-version = "0.1.1"
+version = "0.1.2"
 description = "Open, auditable temporal & sequential pattern analysis (T-patterns) for sport and behaviour"
 readme = "README.md"
 requires-python = ">=3.9"
