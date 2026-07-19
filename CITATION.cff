@@ -17,13 +17,6 @@ date-released: 2026-07-16
 license: MIT
 repository-code: "https://github.com/ajcallaway/TPattern"
 doi: 10.5281/zenodo.21397543
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.21397543
-    description: "Concept DOI — permanent; always resolves to the current release"
-  - type: doi
-    value: 10.5281/zenodo.21397544
-    description: "Version DOI for v0.1.0"
 keywords:
   - T-pattern analysis
   - THEME

@@ -14,10 +14,17 @@ authors = [
 ]
 keywords = ["t-pattern", "THEME", "temporal", "sequence", "sport", "behaviour", "notation analysis"]
 classifiers = [
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 dependencies = [
     "numpy>=1.21",
@@ -27,10 +34,12 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
+gui = ["ipywidgets>=8", "pandas>=1.3", "openpyxl>=3"]
 
 [project.urls]
 Homepage = "https://github.com/ajcallaway/TPattern"
 Repository = "https://github.com/ajcallaway/TPattern"
+"Archive (DOI)" = "https://doi.org/10.5281/zenodo.21397543"
 "Tagging tool (OpenTag)" = "https://opentag.studio"
 
 [tool.setuptools]

@@ -81,7 +81,9 @@ def build_profiles(observations) -> dict:
     for o in observations:
         span = max(o.end - o.start, 1)
         for t, ev in o.events:
-            pos[ev].append((t - o.start) / span)
+            # clamp to [0, 1] so a surrogate can never be placed outside the
+            # observation window even if an event's time falls on/just past a border.
+            pos[ev].append(min(1.0, max(0.0, (t - o.start) / span)))
     return {ev: np.asarray(v) for ev, v in pos.items()}
 
 
@@ -178,9 +180,14 @@ def run_null(observations, config: Config | None = None,
     # count, per real signature, how many surrogate runs match-or-beat it
     beat: dict[str, int] = defaultdict(int)
 
+    # fixed per-method offset — NOT hash(method), whose value is salted per Python
+    # process (PYTHONHASHSEED), which would make identical `seed` arguments produce
+    # different surrogates across runs despite the reproducibility the signature promises.
+    method_offset = {"rotation": 0, "shuffling": 1}
     for method in ("rotation", "shuffling"):
         for r in range(n_runs):
-            rng = random.Random((hash(method) ^ (r * 2654435761) ^ seed) & 0xFFFFFFFF)
+            rng = random.Random((method_offset[method] * 2246822519
+                                 ^ (r * 2654435761) ^ seed) & 0xFFFFFFFF)
             surrogate = randomise_sample(observations, method, rng)
             pats = Engine(surrogate, config).detect()
             runs[method].append(pats)

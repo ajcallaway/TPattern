@@ -41,6 +41,30 @@ def _fmt_ci(ci, unit):
     return f"[{ci[0]},{ci[1]}]{unit}"
 
 
+def interpret(pattern, N, fdr_q, *, q_target=0.05, ci_unit=""):
+    """A plain-English reading of one calibrated pattern — what it is, whether it
+    is trustworthy, and its timing. Used as the results table's `interpretation`
+    column so a non-specialist can read the output directly."""
+    if fdr_q <= q_target:
+        verdict, meaning = (f"Robust (survives FDR, q={fdr_q:.3g})",
+                            "a genuine recurring sequence")
+    elif fdr_q <= 2 * q_target:
+        verdict, meaning = (f"Borderline (q={fdr_q:.3g})",
+                            "near the significance threshold — treat with caution and "
+                            "re-check with more surrogates")
+    else:
+        verdict, meaning = (f"Not significant after correction (q={fdr_q:.3g})",
+                            "consistent with chance")
+    timing = ""
+    if pattern.ci and not pattern.is_terminal:
+        d1, d2 = pattern.ci
+        timing = (f"; its components are linked within {d1}–{d2}{ci_unit}"
+                  if d1 != d2 else f"; components co-occur (0{ci_unit} apart)")
+    loop = " (a recycling loop: a repeated event type)" if pattern.has_loop else ""
+    plural = "occurrence" if N == 1 else "occurrences"
+    return f"{verdict}: {meaning}, {N} {plural}{timing}{loop}."
+
+
 def patterns_table(source, outfile: str | None = None, ci_unit: str = "",
                    sort: str = "auto"):
     """Build a results table from a list of `Pattern` or a `CalibrationResult`.
@@ -68,7 +92,8 @@ def patterns_table(source, outfile: str | None = None, ci_unit: str = "",
             row["p_emp"] = round(it.p_emp, 4)
             row["fdr_q"] = round(it.fdr_q, 4)
             row["fwer_keep"] = int(it.fwer_keep)
-            row["strength"] = round(it.strength, 2)
+            row["analytic_strength"] = round(it.strength, 2)  # -log10(analytic p); comparison only
+            row["interpretation"] = interpret(p, it.N, it.fdr_q, ci_unit=ci_unit)
         rows.append(row)
 
     key = sort

@@ -115,7 +115,38 @@ def _holm_keep(items, get_p, alpha):
 def calibrate(observations, config: Config | None = None, *,
               null: str = "profile", B: int = 200, alpha: float = 0.005,
               q_target: float = 0.05, seed: int = 20260714) -> CalibrationResult:
-    """Detect on real data, then calibrate each pattern against B surrogates."""
+    """Detect T-patterns, then test each one against a surrogate null.
+
+    This is the main analysis call: it runs the detection for you and calibrates
+    every detected pattern, so you do not need to call Engine.detect() first.
+
+    Parameters
+    ----------
+    observations : list[Observation]
+        The sample, e.g. from read_table().
+    config : Config, optional
+        Detection settings (defaults match THEME). Use Config(min_lag=1) to require
+        a genuine temporal lag on frame-coded data. See advisor.recommend() for a
+        data-driven suggestion.
+    null : {"profile", "rotation", "shuffle"}
+        The surrogate null. "profile" preserves each event type's marginal timing and
+        destroys only cross-type coupling (recommended where timing is structured);
+        "rotation"/"shuffle" are THEME-style nulls.
+    B : int
+        Number of surrogate datasets. The empirical p-value cannot fall below
+        1/(B+1), so family-wise (FWER) claims need B in the thousands; FDR is fine
+        at B=200.
+    alpha, q_target : float
+        Family-wise level (Holm) and false-discovery target (Benjamini-Hochberg).
+    seed : int
+        Fixes the surrogate draw, so results are reproducible.
+
+    Returns
+    -------
+    CalibrationResult
+        Call .kept("fdr") or .kept("fwer") for the surviving patterns; each carries
+        an empirical p (.p_emp) and q-value (.fdr_q).
+    """
     config = config or Config()
 
     real_pats = [p for p in Engine(observations, config).detect() if p.level >= 1]
@@ -133,6 +164,10 @@ def calibrate(observations, config: Config | None = None, *,
     surrogate_counts: dict[int, list[int]] = defaultdict(list)
     track_levels = {c.level for c in real}
 
+    # Monte-Carlo core: generate B surrogate datasets and run the *identical*
+    # detector on each. Because detection performs the same window/pair selection
+    # on the surrogates as on the real data, comparing counts is automatically
+    # corrected for the detector's selection bias.
     for b in range(B):
         if null == "profile":
             surr = profile_surrogate(observations, profiles, np_rng)
@@ -140,6 +175,8 @@ def calibrate(observations, config: Config | None = None, *,
             surr = randomise_sample(observations, null, random.Random(seed + b))
         pats = [p for p in Engine(surr, config).detect() if p.level >= 1]
 
+        # For this one surrogate, record the strongest occurrence count reached by
+        # each pattern signature, and collect the analytic strengths for each level.
         best_by_sig: dict[str, int] = {}
         per_level_strength: dict[int, list[float]] = defaultdict(list)
         for p in pats:
@@ -147,9 +184,15 @@ def calibrate(observations, config: Config | None = None, *,
             if p.N > best_by_sig.get(sig, 0):
                 best_by_sig[sig] = p.N
             per_level_strength[p.level].append(_strength(p))
+        # A surrogate "beats" a real pattern when the *same* signature occurs in it
+        # at least as often as in the real data — i.e. chance reproduced it this
+        # strongly. Tally those hits per signature across all B surrogates.
         for sig, n_obs in sig_N.items():
             if best_by_sig.get(sig, 0) >= n_obs:
                 beat_count[sig] += 1
+        # Also pool the surrogate strengths per level, and record how many patterns
+        # this surrogate produced at each level (used for the analytic-strength p
+        # and for the reported surrogate-count distribution).
         for lv in track_levels:
             surr_strengths[lv].extend(per_level_strength.get(lv, []))
             surrogate_counts[lv].append(len(per_level_strength.get(lv, [])))

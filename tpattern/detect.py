@@ -41,7 +41,19 @@ from .pattern import Instance, Pattern
 
 @dataclass
 class Config:
-    """THEME analysis settings (defaults = the paper's settings)."""
+    """Detection settings. The defaults reproduce THEME's parameters, so most users
+    change only a couple of things:
+
+    * ``min_lag`` — set to 1 on frame-coded data (video timestamps), where events
+      sharing a timestamp are co-occurrence, not sequence. Default 0 = THEME's
+      behaviour (co-timing allowed).
+    * ``freq_exclude`` — the frequent-event exclusion (mean occurrences per
+      observation above which a type is barred from building patterns).
+
+    Not sure what to pick? ``advisor.recommend(observations)`` inspects the data and
+    suggests ``min_lag`` (and the null / error control used at ``calibrate``), with
+    the reasoning. Everything else can be left at its default.
+    """
 
     alpha: float = 0.005              # Significance Level
     min_occurrence: int = 3           # Minimum Occurrence
@@ -57,6 +69,10 @@ class Config:
     #                                          [] disables exclusion entirely)
     include_univariate: bool = True   # Univariate Patterns = Include
     completeness: bool = True         # apply completeness competition
+    collapse_equivalent: bool = True  # collapse occurrence-identical patterns (the
+    #   two directions of a co-timed pair, or different bracketings of one chain)
+    #   to a single representative, so counts and the multiple-comparison family
+    #   reflect distinct hypotheses rather than perfectly-dependent duplicates.
     lumping_factor: float | None = None  # THEME Lumping Factor. When (A B) forms
     #   with forward conditional prob N_AB/N_A > this, B is removed from the rest
     #   of the search (it almost always follows A, so the pair is treated as a
@@ -198,6 +214,32 @@ class Engine:
                 keep.append(p)
         return keep
 
+    # ------------------------------------------- occurrence-equivalence collapse
+    @staticmethod
+    def _occ_key(p: Pattern):
+        """A pattern's occurrence identity: the set of (observation, event-token
+        multiset) over its instances. Two composites with the same key describe the
+        SAME underlying occurrences — they are the same hypothesis written
+        differently (the two directions of a co-timed pair, or different bracketings
+        of one chain)."""
+        return frozenset((i.obs, tuple(sorted(i.tokens))) for i in p.instances)
+
+    def _collapse_equivalent(self, patterns: list[Pattern]) -> list[Pattern]:
+        """Keep one deterministic representative per occurrence-equivalence class.
+
+        Occurrence-identical patterns are perfectly dependent: reporting or
+        error-correcting over all of them inflates the pattern count and the
+        multiple-comparison family without adding a distinct hypothesis. We keep the
+        lexicographically smallest signature in each class (deterministic, and the
+        same choice in real and surrogate data, so calibration stays consistent).
+        """
+        groups: dict = {}
+        for p in patterns:
+            groups.setdefault(self._occ_key(p), []).append(p)
+        kept = [min(g, key=lambda p: p.signature()) for g in groups.values()]
+        kept.sort(key=lambda p: (p.level, p.signature()))
+        return kept
+
     # --------------------------------------------------------- full search
     def detect(self, verbose: bool = False) -> list[Pattern]:
         """Run the complete bottom-up detection and return all patterns.
@@ -226,6 +268,10 @@ class Engine:
         composites: list[Pattern] = []
         seen: set[str] = set()
 
+        # MAIN LOOP — build the hierarchy one level at a time. At each level we try
+        # to extend every pattern on the frontier by linking it (on either side)
+        # with every terminal; surviving new patterns seed the next level. The loop
+        # stops as soon as a level produces nothing new.
         frontier: list[Pattern] = list(self.terminals)  # patterns to extend
         for level in range(self.cfg.max_level):
             new: list[Pattern] = []
@@ -278,6 +324,8 @@ class Engine:
 
         if self.cfg.completeness:
             composites = self._completeness_competition(composites)
+        if self.cfg.collapse_equivalent:
+            composites = self._collapse_equivalent(composites)
 
         result: list[Pattern] = []
         if self.cfg.include_univariate:

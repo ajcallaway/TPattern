@@ -37,7 +37,8 @@ from .diagnostics import within_type_diagnostics, summarise
 class Choice:
     option: str
     recommended: str
-    rationale: str
+    rationale: str                       # technical justification (for the methods)
+    plain: str = ""                      # the same reason in plain English
     evidence: dict = field(default_factory=dict)
 
 
@@ -106,6 +107,17 @@ def recommend(observations, *, min_count: int = 15,
                        f"null (N2) was used to isolate cross-event coupling from each "
                        f"type's marginal timing; the rotation null (N1) is reported "
                        f"alongside to quantify the marginal-timing contribution."),
+            plain=("<b>Testing patterns against chance — without being fooled by "
+                   "timing.</b> Some actions naturally tend to happen at particular "
+                   "points (for example, shots come late in a move), so two actions can "
+                   "look 'linked' simply because they tend to occur at similar times — "
+                   "not because one leads to the other. To guard against this, we "
+                   "compare each of your patterns against many reshuffled copies of your "
+                   "data that keep each action's own natural timing but scramble the "
+                   "links between actions; a pattern is kept only if it happens more "
+                   "often than in those reshuffles. <i>Why it's good:</i> the patterns "
+                   "you end up with reflect genuine connections between actions, not "
+                   "accidents of timing."),
             evidence={"frac_non_uniform": frac_nu, **summ},
         )
     else:
@@ -116,6 +128,9 @@ def recommend(observations, *, min_count: int = 15,
                        f"temporal structure, so the rotation (N1) and profile-preserving "
                        f"(N2) nulls effectively coincide; N1 was used with N2 reported "
                        f"to confirm equivalence."),
+            plain=("How we test against chance: your actions are fairly evenly spread "
+                   "in time, so we compare each pattern to simple time-shifted copies "
+                   "of your data — a fair test when timing isn't skewed."),
             evidence={"frac_non_uniform": frac_nu, **summ},
         )
 
@@ -131,6 +146,19 @@ def recommend(observations, *, min_count: int = 15,
                        f"within a unit is undefined; a genuine lag was required "
                        f"(min_lag=1) and same-unit co-occurrences were tabulated "
                        f"separately as concurrency rather than sequence."),
+            plain=(f"<b>Is it a sequence, or two things happening at once?</b> "
+                   f"{stf:.0%} of your events share the exact same timestamp — coded at "
+                   f"the same instant (e.g. the same video frame). <i>Why this "
+                   f"matters:</i> when two actions happen at the same moment, there is no "
+                   f"way to know which came first, so treating one as a 'follow-on' from "
+                   f"the other would invent an order that isn't really in your data and "
+                   f"could turn things-happening-together into fake sequences. <i>What we "
+                   f"do:</i> we count one action as following another only when there is "
+                   f"a real gap in time between them; same-instant actions are reported "
+                   f"as happening together, not as a sequence. <i>Why it's good:</i> "
+                   f"it's a safeguard — a few apparent patterns built only on "
+                   f"same-instant events drop out (correctly, because they were never "
+                   f"sequences), so your conclusions are stronger, not weaker."),
             evidence=res,
         )
     else:
@@ -138,6 +166,10 @@ def recommend(observations, *, min_count: int = 15,
             "Minimum lag", "min_lag = 0 (concurrency negligible)",
             rationale=(f"Only {stf:.0%} of consecutive events shared a timestamp, so "
                        f"concurrency is negligible and no minimum lag was imposed."),
+            plain=(f"<b>Is it a sequence, or two things happening at once?</b> Only "
+                   f"{stf:.0%} of your events share a timestamp, so their order is "
+                   f"reliable — we can trust which came first — and every event is "
+                   f"kept."),
             evidence=res,
         )
 
@@ -148,6 +180,14 @@ def recommend(observations, *, min_count: int = 15,
                    f"against the null and controlled by false-discovery rate "
                    f"(Benjamini-Hochberg, q=0.05) for discovery, with family-wise "
                    f"control (alpha=0.005) additionally reported for confirmatory claims."),
+        plain=("<b>Guarding against false alarms.</b> When many patterns are tested at "
+               "once, some will look 'significant' just by luck. We use the "
+               "<b>false-discovery rate (FDR)</b> — a standard method that keeps the "
+               "share of these lucky flukes among your flagged results low (under 5%). "
+               "<i>Impact:</i> the patterns marked 'robust' are ones you can rely on, "
+               "not chance findings. A stricter check (the family-wise rate) is also "
+               "reported for when you want to be extra cautious about one specific "
+               "pattern."),
         evidence={"n_obs": n_obs},
     )
 

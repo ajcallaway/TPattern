@@ -1,28 +1,24 @@
 """
-Reading THEME observation files.
-================================
+Reading event data into a sample of observations.
+==================================================
 
-THEME stores each observation (here: one shot-ending possession sequence) as a
-plain tab-separated text file:
+The primary entry point is :func:`read_table`, which reads the canonical flat CSV
+that any coding tool can export (one row per event: ``observation, event, start``;
+see SCHEMA.md). This is what almost all users want::
 
-    time    event
-    1       :                       <- window START marker
-    2       Pass_Complete_NoPressure
-    1303    Shot_Goal_Pressure
-    1304    &                       <- window END marker
+    from tpattern import read_table
+    obs = read_table("events.csv")
 
-* `time` is an integer clock in milliseconds.
-* `:`  marks the beginning of the observation window.
-* `&`  marks the end of the observation window.
-* Every other row is a real *event occurrence*: a point in time at which an
-  event of a given *type* happened.
+A T-pattern analysis runs over a *collection* of observations (a "sample"). Each
+observation is one independent time-line (a possession, rally, bout, match);
+patterns are counted across all observations, but a single pattern occurrence can
+never straddle two of them. Several events may share a timestamp — the detection
+engine treats co-timed events as an unordered set at that instant (see
+``Config.min_lag`` to require a genuine lag instead).
 
-Several events may share a timestamp (simultaneous events). We keep them; the
-detection engine treats co-occurring events as an unordered set at that instant.
-
-A T-pattern analysis is run over a *collection* of these files (a "sample").
-Patterns are counted across all observations, but a single pattern occurrence
-can never straddle two observations — each file is an independent time-line.
+:func:`read_sample` / :func:`read_observation` are a legacy reader for THEME's
+tab-separated observation files, kept for compatibility: one file per observation,
+``time<TAB>event`` rows, with ``:`` and ``&`` marking the observation window.
 """
 
 from __future__ import annotations
@@ -153,6 +149,8 @@ def read_table(path: str | Path, *, observation: str = "observation",
         seconds are scaled by 1000 (the engine's baseline maths is unit-agnostic;
         this only fixes the reported interval unit).
     """
+    if time_unit not in ("s", "ms"):
+        raise ValueError(f"time_unit must be 's' or 'ms', got {time_unit!r}")
     path = Path(path)
     scale = 1000 if time_unit == "s" else 1
     rows_by_obs: dict[str, list] = defaultdict(list)
@@ -161,15 +159,27 @@ def read_table(path: str | Path, *, observation: str = "observation",
 
     with open(path, newline="") as fh:
         reader = csv.DictReader(fh, delimiter=sep)
-        missing = {observation, start} - set(reader.fieldnames or [])
+        cols = set(reader.fieldnames or [])
+        # the event code comes from `event`, unless it is built from other columns
+        code_cols = set(build_event_from) if build_event_from else {event}
+        required = {observation, start} | code_cols
+        missing = required - cols
         if missing:
-            raise ValueError(f"table missing required column(s): {sorted(missing)}")
+            raise ValueError(
+                f"table {path.name} is missing required column(s) {sorted(missing)}. "
+                f"Found columns: {sorted(cols)}. Expected one row per event with at "
+                f"least '{observation}', '{event}' and '{start}' (rename via the "
+                f"read_table arguments if your export uses different names; see SCHEMA.md).")
         for r in reader:
             obs_id = (r.get(observation) or "").strip()
             if not obs_id:
                 continue
             if build_event_from:
-                code = "_".join((r.get(c) or "").strip() for c in build_event_from)
+                # join only the non-empty parts, so an event with no value for one
+                # column (e.g. a Challenge with no outcome) yields "Challenge_Pressure",
+                # not "Challenge__Pressure", and one with none yields just its type.
+                parts = [(r.get(c) or "").strip() for c in build_event_from]
+                code = "_".join(p for p in parts if p)
             else:
                 code = (r.get(event) or "").strip()
             if not code:

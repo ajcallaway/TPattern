@@ -80,10 +80,8 @@ def within_type_diagnostics(observations, min_count: int = 20) -> list[TypeDiagn
         arr = np.asarray(us)
         ks_stat, ks_p = kstest(arr, "uniform")     # vs Uniform(0,1)
 
-        # Dispersion across ALL observations (missing => 0 occurrences).
-        c = np.zeros(n_obs_total)
-        c[: len(counts[ev])] = counts[ev]           # counts only lists nonzero obs
-        # place the observed nonzero counts; the rest stay 0
+        # Dispersion across ALL observations (missing => 0 occurrences): place the
+        # observed nonzero counts, the rest stay 0.
         cc = np.array(counts[ev] + [0] * (n_obs_total - len(counts[ev])))
         mean = cc.mean()
         var = cc.var(ddof=1)

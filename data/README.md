@@ -23,7 +23,8 @@ per event:
 ```csv
 observation,event,start,obs_start,obs_end
 G001,Pass_Complete_NoPressure,2,1,1304
-G001,Shot_Goal_Pressure,1303,1
+G001,Challenge_Pressure,1301,1,1304
+G001,Shot_Goal_Pressure,1303,1,1304
 ```
 
 - `observation` — one shot-ending possession sequence
@@ -60,6 +61,11 @@ They therefore contain **no player names, team names, match identifiers, pitch
 coordinates, tracking data, or PFF grades** — nothing of the source dataset is
 reproduced. The coding scheme, extraction logic and sequence construction are the
 authors' own.
+
+The exact derivation code — the script that reads the raw PFF event JSONs and
+produces these sequences (steps 1–4 above) — is provided in
+[`derivation/`](derivation/), so the full pipeline from the open source data to the
+analysed sequences is documented and reproducible.
 
 Timestamps are frame-quantised (broadcast tracking at 29.97 fps), which is why
 roughly half of consecutive events share a timestamp. That is a property of the

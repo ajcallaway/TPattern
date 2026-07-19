@@ -4,6 +4,27 @@ There is one fixed input structure. Any coding tool (Sportscode, OpenTag,
 Nacsport, a spreadsheet) can produce it; the library does **not** parse or
 interpret arbitrary formats — the user exports to these columns.
 
+A minimal valid file looks like this — copy it and adapt (each row is one event;
+one `observation` per analysis unit):
+
+```csv
+observation,event,start
+rally01,Serve_Flat,0.0
+rally01,Return_Deep,1.2
+rally01,Winner_Forehand,3.4
+rally02,Serve_Wide,0.0
+rally02,Return_Net,0.9
+```
+
+```python
+from tpattern import read_table
+obs = read_table("events.csv")     # times in seconds; add time_unit="ms" if milliseconds
+```
+
+If your analysis unit has real bounds (a possession, rally or bout — the whistle
+goes before the first event and after the last), add `obs_start`/`obs_end` too
+(see below). The full column set:
+
 It is a flat table, **one row per event**:
 
 | Column | Required | Meaning |

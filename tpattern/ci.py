@@ -175,6 +175,11 @@ def find_critical_interval(
     #     form of 1-exp(-p1*w); it assumes B is uniformly/independently placed.
     #     The diagnostics module shows this is violated (events are clustered),
     #     which is exactly why final significance is set by surrogates, not here.
+    #     NOTE ON FORM: this "NX/T" reading, 1-(1-N_B/T)^w, and Magnusson's published
+    #     form, 1-(1-w/T)^N_B, are both first-order approximations of 1-exp(-N_B*w/T)
+    #     and coincide to <=4e-4 in the pooled-millisecond regime used here (T~1e6);
+    #     they reproduce THEME's anchor counts exactly. Which form THEME uses
+    #     internally cannot be confirmed from outside.
     #   * Independent trials: k ~ Binomial(N_A, p_hit) treats the N_A A-instances
     #     as independent, though they share one B pool (greedy consumes B's).
     #   * No right-censoring correction: A-instances near an observation's end

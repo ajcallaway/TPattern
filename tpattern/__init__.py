@@ -16,6 +16,8 @@ from .report import patterns_table, forest_plot, report
 from .viz import pattern_dendrogram, patterns_overview
 from .advisor import recommend
 from .methods import methods_text
+from .guided import run_analysis, launch
+from .contrast import group_contrast, contrast_items
 
 __version__ = "0.1.0"
 
@@ -29,4 +31,6 @@ __all__ = [
     "patterns_table", "forest_plot", "report",
     "pattern_dendrogram", "patterns_overview",
     "recommend", "methods_text",
+    "run_analysis", "launch",
+    "group_contrast", "contrast_items",
 ]

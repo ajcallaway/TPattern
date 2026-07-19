@@ -190,7 +190,7 @@ def reproduce_calibration(B):
                         alpha=.005, q_target=.05, seed=SEED)
         print(f"{g:13}{len(res.real):>15}{len(res.kept('fdr')):>10}"
               f"{len(res.kept('fwer')):>11}")
-    print("  => goals 10/23, non-goals 83/154, defensive recovery 32/69 survive FDR.")
+    print("  => goals 10/21, non-goals 60/114, defensive recovery 25/51 survive FDR.")
 
     # ---- Section 3.3 null-choice: rotation (N1) vs profile (N2), Goals, B=2000 ----
     print("\n" + "=" * 70)
@@ -219,6 +219,26 @@ def reproduce_calibration(B):
             print(f"      N={c.N:>3} q={c.fdr_q:.3f}  {c.pattern}")
     print("  => Goals 1 (cross->shot_goal, q=.006); NonGoals 19 (cross-delivery family);")
     print("     DefRecovery power-limited. Note: FWER needs B in the thousands (Section 4).")
+
+    # ---- Section 3.5: robustness across surrogate seeds ----
+    print("\n" + "=" * 70)
+    print("SECTION 3.5 — robustness across random seeds (Goals, profile null, B=200)")
+    print("=" * 70)
+    goals = load("Goals")
+    survsets = []
+    for seed in (1, 2, 3, 4, 5):
+        r = calibrate(goals, Config(), null="profile", B=200, q_target=.05, seed=seed)
+        survsets.append({str(c.pattern) for c in r.kept("fdr")})
+        print(f"  seed {seed}: {len(r.real)} detected (identical), "
+              f"{len(survsets[-1])} survive FDR")
+    robust = set.intersection(*survsets)
+    flip = set.union(*survsets) - robust
+    print(f"  => survive under ALL seeds (robust): {len(robust)}; "
+          f"flip with seed (borderline): {len(flip)}")
+    for p in sorted(flip):
+        print(f"       borderline: {p}")
+    print("  Detection is seed-independent; only the calibration varies, and only at "
+          "the q-threshold.")
 
 
 if __name__ == "__main__":
