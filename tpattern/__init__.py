@@ -6,7 +6,7 @@ behavior: T-patterns and their detection. Behavior Research Methods,
 Instruments, & Computers, 32(1), 93-110.
 """
 
-__version__ = "0.1.2"   # defined before submodule imports (methods.py reads it)
+__version__ = "0.1.4"   # defined before submodule imports (methods.py reads it)
 
 from .io import Observation, read_observation, read_sample, read_table
 from .pattern import Instance, Pattern
@@ -15,7 +15,7 @@ from .detect import Config, Engine
 from .randomise import run_null, NullResult, rotate, shuffle
 from .significance import calibrate, CalibrationResult
 from .report import patterns_table, forest_plot, report
-from .viz import pattern_dendrogram, patterns_overview
+from .viz import pattern_dendrogram, patterns_overview, support_profile
 from .advisor import recommend
 from .methods import methods_text
 from .guided import run_analysis, launch
@@ -29,7 +29,7 @@ __all__ = [
     "run_null", "NullResult", "rotate", "shuffle",
     "calibrate", "CalibrationResult",
     "patterns_table", "forest_plot", "report",
-    "pattern_dendrogram", "patterns_overview",
+    "pattern_dendrogram", "patterns_overview", "support_profile",
     "recommend", "methods_text",
     "run_analysis", "launch",
     "group_contrast", "contrast_items",

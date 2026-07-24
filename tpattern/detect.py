@@ -90,11 +90,27 @@ class Config:
     #                                   a genuine temporal lag, so same-timestamp
     #                                   co-occurrences are excluded and handled
     #                                   separately as "simultaneity".
-    freq_exclude: float | None = 1.50  # auto exclude if mean/obs exceeds this
+    freq_exclude: float | None = 1.50  # auto exclude threshold; meaning depends on
+    #                                    freq_exclude_mode below
+    freq_exclude_mode: str = "per_observation"  # "per_observation" (default): exclude a
+    #   type whose MEAN OCCURRENCES PER OBSERVATION exceed freq_exclude.
+    #   "theme_sd": THEME's documented rule (Theme 6 manual, "Exclude Frequent Event
+    #   Types") -- exclude a type whose total frequency exceeds mean + x*SD of the
+    #   event-type frequency distribution, where x = freq_exclude. THEME suggests 2.5
+    #   and notes 1.5-2.5 often works. The two rules are different quantities that can
+    #   share a number, which is why a value of 1.50 does not mean the same thing in
+    #   both tools.
     exclude_events: list[str] | None = None  # explicit exclusion list (overrides
     #                                          the frequency rule when provided;
     #                                          [] disables exclusion entirely)
     include_univariate: bool = True   # Univariate Patterns = Include
+    collapse_duplicates: bool = True  # collapse same-type events sharing an identical
+    #   timestamp to one point. In the point process the detector is built on, the
+    #   unit is (type, time): two records of one type at the same instant occupy a
+    #   single point (Δt = 0, no ordering information), and retaining both inflates
+    #   N_B in the NX/T baseline without changing window occupancy. Collapsing is the
+    #   treatment consistent with that baseline; it also matches THEME's import.
+    #   (Different types at Δt = 0 are genuine co-occurrence — that is min_lag's job.)
     completeness: bool = True         # apply completeness competition
     collapse_equivalent: bool = True  # collapse occurrence-identical patterns (the
     #   two directions of a co-timed pair, or different bracketings of one chain)
@@ -111,6 +127,25 @@ class Config:
     #                                        pattern can only span fewer observations),
     #                                        so it is pruned during the search.
     max_level: int = 8                # safety cap on hierarchy depth
+
+    def excluded_types(self, counts: dict, n_obs: int) -> set:
+        """Which event types are barred from *building* patterns.
+
+        `counts` maps event type -> total number of occurrences. Returns the set to
+        exclude, resolving `freq_exclude_mode`.
+        """
+        if self.exclude_events is not None:
+            return set(self.exclude_events)
+        if self.freq_exclude is None or not counts:
+            return set()
+        if self.freq_exclude_mode == "theme_sd":
+            vals = list(counts.values())
+            mean = sum(vals) / len(vals)
+            var = sum((v - mean) ** 2 for v in vals) / len(vals)
+            sd = var ** 0.5
+            cut = mean + self.freq_exclude * sd
+            return {ev for ev, c in counts.items() if c > cut}
+        return {ev for ev, c in counts.items() if c / n_obs > self.freq_exclude}
 
     def is_excluded(self, event: str, mean_per_obs: float) -> bool:
         """Decide whether an event type is barred from *building* patterns.
@@ -162,18 +197,28 @@ class Engine:
         by_type: dict[str, list[Instance]] = defaultdict(list)
         token = 0
         for i, o in enumerate(self.obs):
+            seen_pt: set[tuple[str, int]] = set()   # (type, time) points seen in this obs
             for t, ev in o.events:
-                # Every raw event occurrence gets a globally-unique token id so
-                # that composite patterns can never reuse the same event twice.
+                if self.cfg.collapse_duplicates:
+                    # Same type at an identical timestamp = one point in the process;
+                    # keep the first, drop repeats (they add no window information and
+                    # would inflate the NX/T baseline). See Config.collapse_duplicates.
+                    if (ev, t) in seen_pt:
+                        continue
+                    seen_pt.add((ev, t))
+                # Every retained occurrence gets a globally-unique token id so that
+                # composite patterns can never reuse the same event twice.
                 by_type[ev].append(Instance(obs=i, start=t, end=t, tokens=frozenset((token,))))
                 token += 1
 
         n_obs = len(self.obs)
+        counts = {ev: len(insts) for ev, insts in by_type.items()}
+        excluded = self.cfg.excluded_types(counts, n_obs)
         self.univariate, self.terminals, self.excluded = [], [], []
         for ev, insts in sorted(by_type.items()):
             term = Pattern(event=ev, instances=insts)
             self.univariate.append(term)
-            if self.cfg.is_excluded(ev, len(insts) / n_obs):
+            if ev in excluded:
                 self.excluded.append(ev)
                 continue
             if len(insts) < self.cfg.min_occurrence:

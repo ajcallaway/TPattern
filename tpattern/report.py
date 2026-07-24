@@ -66,23 +66,37 @@ def interpret(pattern, N, fdr_q, *, q_target=0.05, ci_unit=""):
 
 
 def patterns_table(source, outfile: str | None = None, ci_unit: str = "",
-                   sort: str = "auto"):
+                   sort: str = "auto", n_observations: int = 0):
     """Build a results table from a list of `Pattern` or a `CalibrationResult`.
 
     Returns a list of row dicts. If `outfile` is given, also writes CSV.
     When given a CalibrationResult, includes p_emp, fdr_q, fwer_keep and sorts by
     p_emp; otherwise sorts by N (descending).
+
+    Every row carries `bouts` (distinct observations the pattern spans) and
+    `bout_support` (that as a fraction of the sample). Prevalence is reported rather
+    than filtered on: a reader can apply whatever support threshold they consider
+    appropriate, which a pre-applied cut-off would have denied them. Pass
+    `n_observations` to get support when `source` is a plain list of patterns.
     """
     calibrated = isinstance(source, CalibrationResult)
     items = source.real if calibrated else [p for p in source if p.level >= 1]
+    n_obs = n_observations or (source.n_observations if calibrated else 0)
 
     rows = []
     for it in items:
         p = it.pattern if calibrated else it
+        # Distinct observations (bouts) the pattern spans. N counts occurrences and
+        # can exceed this, because one bout may contain the pattern several times.
+        # Reported so prevalence is visible as a number: a reader can then apply any
+        # support threshold they wish, rather than trusting one applied for them.
+        bouts = len({inst.obs for inst in p.instances})
         row = {
             "pattern": str(p),
             "signature": p.signature(),
             "N": p.N,
+            "bouts": bouts,
+            "bout_support": round(bouts / n_obs, 4) if n_obs else None,
             "length": p.length,
             "level": p.level,
             "loop": int(p.has_loop),

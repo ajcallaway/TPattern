@@ -47,11 +47,14 @@ class Recommendation:
     n_obs: int
     n_events: int
     choices: list[Choice]
+    notes: list[str] = field(default_factory=list)
 
     def __str__(self) -> str:
         lines = [f"Dataset: {self.n_obs} observations, {self.n_events} events\n"]
         for c in self.choices:
             lines.append(f"[{c.option}]  ->  {c.recommended}\n    {c.rationale}")
+        for n in self.notes:
+            lines.append(f"[note]  {n}")
         return "\n".join(lines)
 
     def methods_text(self) -> str:
@@ -272,6 +275,29 @@ def recommend(observations, *, min_count: int = 15,
         evidence={"floor_at_200": 1/201, "floor_at_2000": 1/2001},
     )
 
+    # --- diagnostic (reported, not recommended): same-instant duplicate records ---
+    notes = []
+    n_dup = 0
+    for o in observations:
+        seen = set()
+        for t, ev in o.events:
+            if (ev, t) in seen:
+                n_dup += 1
+            else:
+                seen.add((ev, t))
+    if n_dup:
+        res = _resolution_stats(observations)
+        gap = res.get("min_nonzero_gap")
+        coarse = (f" Your finest inter-event gap is {gap} time units, so if that resolution is "
+                  f"coarse for your data these may be genuinely distinct events; set "
+                  f"collapse_duplicates=False to keep them.") if gap and gap > 1 else ""
+        notes.append(
+            f"{n_dup} same-instant duplicate record(s) (same event type at an identical timestamp) "
+            f"were found and are collapsed to one point by default (collapse_duplicates): two records "
+            f"at the same instant occupy one point and retaining both would inflate that type's "
+            f"baseline rate.{coarse}")
+
     return Recommendation(n_obs=n_obs, n_events=n_events,
                           choices=[freq_choice, min_occ_choice, null_choice, lag_choice,
-                                   err_choice, B_choice])
+                                   err_choice, B_choice],
+                          notes=notes)

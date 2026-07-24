@@ -12,8 +12,8 @@ authors:
     given-names: Andrew
     orcid: "https://orcid.org/0000-0003-0987-9608"
     affiliation: "Bournemouth University"
-version: 0.1.2
-date-released: 2026-07-19
+version: 0.1.4
+date-released: 2026-07-22
 license: MIT
 repository-code: "https://github.com/ajcallaway/TPattern"
 doi: 10.5281/zenodo.21397543

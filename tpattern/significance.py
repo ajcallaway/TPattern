@@ -76,6 +76,7 @@ class CalibrationResult:
     alpha: float
     q_target: float
     null: str
+    n_observations: int = 0    # sample size, so bout support can be reported
 
     def kept(self, method: str = "fdr") -> list[Calibrated]:
         if method == "fwer":
@@ -221,4 +222,5 @@ def calibrate(observations, config: Config | None = None, *,
             c.fdr_q = qmap[id(c)]
 
     return CalibrationResult(real=real, surrogate_counts=surrogate_counts,
-                             B=B, alpha=alpha, q_target=q_target, null=null)
+                             B=B, alpha=alpha, q_target=q_target, null=null,
+                             n_observations=len(observations))

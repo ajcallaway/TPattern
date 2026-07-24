@@ -190,7 +190,7 @@ def reproduce_calibration(B):
                         alpha=.005, q_target=.05, seed=SEED)
         print(f"{g:13}{len(res.real):>15}{len(res.kept('fdr')):>10}"
               f"{len(res.kept('fwer')):>11}")
-    print("  => goals 10/21, non-goals 60/114, defensive recovery 25/51 survive FDR.")
+    print("  => goals 11/22, non-goals 54/103, defensive recovery 20/45 survive FDR (0.1.4).")
 
     # ---- Section 3.3 null-choice: rotation (N1) vs profile (N2), Goals, B=2000 ----
     print("\n" + "=" * 70)

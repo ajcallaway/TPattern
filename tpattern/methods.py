@@ -82,6 +82,11 @@ def methods_text(config, *, observations=None, calibration=None,
                  "eligible to build patterns.")
 
     # --- concurrency handling ---
+    if getattr(config, "collapse_duplicates", True):
+        s.append(
+            "Multiple records of one event type at an identical timestamp were "
+            "collapsed to a single occurrence, since they occupy one point in the "
+            "process and retaining them would inflate that type's baseline rate.")
     if getattr(config, "min_lag", 0) and config.min_lag >= 1:
         s.append(
             f"A genuine temporal gap of at least {config.min_lag} time unit(s) was "
@@ -99,10 +104,33 @@ def methods_text(config, *, observations=None, calibration=None,
     if getattr(config, "completeness", True):
         s.append("Patterns whose every occurrence was contained within a longer "
                  "detected pattern were removed (completeness competition).")
+    else:
+        s.append("Completeness competition was disabled, so patterns fully contained "
+                 "within longer ones were retained and counted separately.")
+    # These change the reported counts and the size of the multiple-comparison family,
+    # so they belong in the Methods whether or not they are left at their defaults.
+    if getattr(config, "collapse_equivalent", True):
+        s.append("Patterns sharing an identical set of occurrences (the two directions "
+                 "of a co-timed pair, or different bracketings of one chain) were "
+                 "collapsed to a single representative before counting and before "
+                 "correction, so perfectly dependent duplicates were neither reported "
+                 "nor tested twice.")
+    else:
+        s.append("Occurrence-equivalent patterns were not collapsed, so different "
+                 "bracketings of the same chain appear as separate patterns and enter "
+                 "the multiple-comparison family separately.")
+    if not getattr(config, "include_univariate", True):
+        s.append("Univariate (single-event) patterns were excluded from the output.")
     if getattr(config, "lumping_factor", None) is not None:
         s.append(f"A lumping factor of {config.lumping_factor} was applied: when a "
                  f"pair (A, B) formed with a forward conditional probability above this "
                  f"value, the dependent terminal was removed from the remaining search.")
+    if getattr(config, "max_edges", None) is not None:
+        s.append(f"The critical-interval search was capped at {config.max_edges} "
+                 f"candidate window boundaries per pair, so the window search was "
+                 f"approximate rather than exhaustive.")
+    if getattr(config, "max_level", 8) != 8:
+        s.append(f"The pattern hierarchy was capped at {config.max_level} levels.")
     if getattr(config, "min_samples_frac", None) is not None:
         s.append(f"Patterns were additionally required to occur in at least "
                  f"{config.min_samples_frac:.0%} of observations.")

@@ -31,3 +31,17 @@ def test_collapse_does_not_touch_headline():
     pats = [p for p in Engine(obs, Config(min_lag=1)).detect() if p.level >= 1]
     keys = _occ_keys(pats)
     assert len(keys) == len(set(keys))  # headline path has no duplicates anyway
+
+
+def test_same_time_same_type_duplicates_collapse():
+    """Same-type events at an identical timestamp collapse to one point (default);
+    they are retained only when the option is explicitly disabled."""
+    from tpattern import Observation, Engine, Config
+    obs = [Observation(name="o", start=0, end=200,
+                       events=[(0, "A"), (0, "A"), (100, "A"), (0, "B")])]
+    eng = Engine(obs, Config()); eng.build_terminals()
+    n_A = next(p.N for p in eng.univariate if p.event == "A")
+    assert n_A == 2, f"collapse: A should be 2 distinct points, got {n_A}"
+    eng2 = Engine(obs, Config(collapse_duplicates=False)); eng2.build_terminals()
+    n_A2 = next(p.N for p in eng2.univariate if p.event == "A")
+    assert n_A2 == 3, f"no-collapse: A should retain all 3, got {n_A2}"
