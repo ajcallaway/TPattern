@@ -6,16 +6,17 @@ behavior: T-patterns and their detection. Behavior Research Methods,
 Instruments, & Computers, 32(1), 93-110.
 """
 
-__version__ = "0.1.4"   # defined before submodule imports (methods.py reads it)
+__version__ = "0.1.5"   # defined before submodule imports (methods.py reads it)
 
 from .io import Observation, read_observation, read_sample, read_table
 from .pattern import Instance, Pattern
 from .ci import find_critical_interval, CIResult
 from .detect import Config, Engine
 from .randomise import run_null, NullResult, rotate, shuffle
-from .significance import calibrate, CalibrationResult
+from .significance import calibrate, CalibrationResult, compare_nulls, NullComparison
 from .report import patterns_table, forest_plot, report
-from .viz import pattern_dendrogram, patterns_overview, support_profile
+from .viz import (pattern_dendrogram, patterns_overview, support_profile,
+                  null_comparison_plot)
 from .advisor import recommend
 from .methods import methods_text
 from .guided import run_analysis, launch

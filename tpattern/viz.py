@@ -219,3 +219,56 @@ def support_profile(result, outfile: str, title: str | None = None,
     fig.savefig(outfile)
     plt.close(fig)
     return [(sig, s) for sig, _, s in items]
+
+
+def null_comparison_plot(comparison, outfile, title=None, max_rows=25):
+    """Grid of which surrogate nulls each pattern survives, so the DIFFERENCE reads
+    at a glance. One row per pattern (surviving under at least one null), one column
+    per null; a filled cell means the pattern survives that null, annotated with its
+    q-value. Patterns are grouped core-first, then each null's unique (shell) set.
+
+    `comparison` is a NullComparison from compare_nulls(). Returns the rows plotted.
+    """
+    nulls = comparison.nulls
+    # order: core first, then each null's unique set, most significant within group
+    def _minq(sig):
+        return min((comparison._q(n, sig) or 1.0) for n in nulls)
+    ordered = ([s for s in sorted(comparison.common, key=_minq)]
+               + [s for n in nulls for s in sorted(comparison.unique[n], key=_minq)])
+    seen = set()
+    ordered = [s for s in ordered if not (s in seen or seen.add(s))][:max_rows]
+    if not ordered:
+        fig, ax = plt.subplots(figsize=(6, 2), dpi=200)
+        ax.text(0.5, 0.5, "No pattern survived under any null.", ha="center", va="center")
+        ax.axis("off"); fig.savefig(outfile); plt.close(fig); return []
+
+    GREEN, GREY, EDGE = "#2f7d4f", "#e4e7ec", "#333"
+    nrow, ncol = len(ordered), len(nulls)
+    fig, ax = plt.subplots(figsize=(3.0 + 1.5 * ncol, 1.1 + 0.42 * nrow), dpi=200)
+    for r, sig in enumerate(ordered):
+        y = nrow - 1 - r
+        layer = comparison.layer(sig)
+        for c, n in enumerate(nulls):
+            surv = sig in comparison.survives[n]
+            ax.add_patch(plt.Rectangle((c, y), 0.92, 0.92, facecolor=GREEN if surv else GREY,
+                                       edgecolor=EDGE, lw=0.6))
+            q = comparison._q(n, sig)
+            if q is not None:
+                ax.text(c + 0.46, y + 0.46, f"{q:.3f}", ha="center", va="center",
+                        fontsize=7.5, color="white" if surv else "#8a93a3",
+                        fontweight="bold" if surv else "normal")
+        ax.text(ncol + 0.15, y + 0.46, f"{sig}", ha="left", va="center", fontsize=7.4)
+        ax.text(-0.15, y + 0.46, layer, ha="right", va="center", fontsize=6.8,
+                color="#5b6270", style="italic")
+    ax.set_xlim(-2.4, ncol + 6.5); ax.set_ylim(-0.3, nrow + 0.2)
+    for c, n in enumerate(nulls):
+        ax.text(c + 0.46, nrow + 0.02, n, ha="center", va="bottom", fontsize=9, fontweight="bold")
+    ax.axis("off")
+    if title:
+        ax.set_title(title, fontsize=10.5, fontweight="bold", loc="left")
+    fig.text(0.5, 0.005, "filled = survives that null (q shown); core = survives all nulls, "
+             "shell = survives one null only", ha="center", fontsize=6.8, color="#8a93a3")
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.savefig(outfile)
+    plt.close(fig)
+    return ordered

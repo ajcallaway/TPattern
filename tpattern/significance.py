@@ -224,3 +224,121 @@ def calibrate(observations, config: Config | None = None, *,
     return CalibrationResult(real=real, surrogate_counts=surrogate_counts,
                              B=B, alpha=alpha, q_target=q_target, null=null,
                              n_observations=len(observations))
+
+
+# ---- comparing nulls ---------------------------------------------------------
+
+@dataclass
+class NullComparison:
+    """Calibration of one sample under several surrogate nulls, and their difference.
+
+    The informative output is the DIFFERENCE between nulls, not either null alone.
+    With the profile and rotation nulls the surviving sets nest, and split into:
+
+      * the *core*  -- patterns surviving under every null: the coupling (sequence)
+        claim, genuine coordination beyond each event type's own timing;
+      * the *shell* -- patterns surviving the rotation null but not the profile null:
+        co-occurrence driven by shared timing (two types that inhabit the same phase
+        of play) rather than by coordination.
+
+    The shell is a finding in its own right, not noise: it answers "which actions
+    occupy the same moment?" while the core answers "which actions are chained?".
+    Build one with compare_nulls().
+    """
+    nulls: list
+    method: str
+    q_target: float
+    results: dict            # null -> CalibrationResult
+    detected: dict           # null -> {signature: Calibrated} (detection is null-independent)
+    survives: dict           # null -> set(signature) surviving the correction
+    common: set              # signatures surviving under ALL nulls (the core)
+    unique: dict             # null -> set(signature) surviving under that null alone
+
+    def _q(self, null, sig):
+        c = self.detected[null].get(sig)
+        return None if c is None else c.fdr_q
+
+    def _N(self, sig):
+        for d in self.detected.values():
+            if sig in d:
+                return d[sig].N
+        return None
+
+    def layer(self, sig):
+        """Which layer a surviving pattern occupies: 'core', '<null>-only', or a join."""
+        surv = tuple(n for n in self.nulls if sig in self.survives[n])
+        if len(surv) == len(self.nulls):
+            return "core"
+        if len(surv) == 1:
+            return f"{surv[0]}-only"
+        return "+".join(surv) if surv else "none"
+
+    def rows(self):
+        """One row per pattern surviving under at least one null, most significant first.
+
+        Each row: signature, N, layer, and per-null (survives, q). Tidy for a table.
+        """
+        anysurv = set().union(*self.survives.values()) if self.survives else set()
+        sigs = sorted(anysurv, key=lambda s: min((self._q(n, s) or 1.0) for n in self.nulls))
+        return [{
+            "signature": s,
+            "N": self._N(s),
+            "layer": self.layer(s),
+            "survives": {n: (s in self.survives[n]) for n in self.nulls},
+            "q": {n: self._q(n, s) for n in self.nulls},
+        } for s in sigs]
+
+    def summary(self):
+        """Short text summary that leads with the difference between nulls."""
+        pr = set(self.nulls) >= {"profile", "rotation"}
+        lines = [f"{n:10s}: {len(self.survives[n])} survive ({self.method.upper()} q<={self.q_target})"
+                 for n in self.nulls]
+        lines.append(f"core (survives all{', the coupling claim' if pr else ''}): {len(self.common)}")
+        for n in self.nulls:
+            if self.unique[n]:
+                tag = " (shared-timing shell)" if (n == "rotation" and "profile" in self.nulls) else ""
+                lines.append(f"{n}-only{tag}: {len(self.unique[n])}")
+        return "\n".join(lines)
+
+    def __str__(self):
+        head = f"Null comparison [{', '.join(self.nulls)}]"
+        tab = [f"  {'pattern':<50s} {'N':>4s}  "
+               + "  ".join(f"{n[:8]:>9s}" for n in self.nulls) + "  layer"]
+        for r in self.rows():
+            cells = "  ".join(
+                ((f"{r['q'][n]:.3f}" if r['q'][n] is not None else "  -  ")
+                 + ("*" if r['survives'][n] else " ")).rjust(9)
+                for n in self.nulls)
+            tab.append(f"  {r['signature'][:50]:<50s} {r['N']:>4d}  {cells}  {r['layer']}")
+        return (head + "\n" + self.summary() + "\n\n" + "\n".join(tab)
+                + "\n  (* = survives the correction; q shown per null)")
+
+
+def compare_nulls(observations, config=None, *, nulls=("profile", "rotation"),
+                  B=200, alpha=0.005, q_target=0.05, method="fdr", seed=20260714):
+    """Calibrate one sample under several nulls and decompose the survivors.
+
+    This is the 'both' option: it runs calibrate() once per null and reports, for
+    every pattern, which nulls it survives under, so the DIFFERENCE between nulls is
+    explicit. With the default profile-vs-rotation pair the result splits into a
+    coupling core (survives both) and a shared-timing shell (rotation-only); the
+    shell is a positive finding, not noise (see NullComparison).
+
+    Parameters mirror calibrate(); `nulls` is the tuple of nulls to compare and
+    `method` selects "fdr" or "fwer" for deciding survival. Detection is identical
+    across nulls, so only the calibration is repeated.
+
+    Returns a NullComparison: print it for a table, or use .rows()/.common/.unique.
+    """
+    config = config or Config()
+    nulls = list(nulls)
+    results = {n: calibrate(observations, config, null=n, B=B, alpha=alpha,
+                            q_target=q_target, seed=seed) for n in nulls}
+    detected = {n: {c.pattern.signature(): c for c in results[n].real} for n in nulls}
+    survives = {n: {c.pattern.signature() for c in results[n].kept(method)} for n in nulls}
+    common = set.intersection(*survives.values()) if survives else set()
+    unique = {n: survives[n] - set().union(*[survives[m] for m in nulls if m != n])
+              for n in nulls}
+    return NullComparison(nulls=nulls, method=method, q_target=q_target,
+                          results=results, detected=detected, survives=survives,
+                          common=common, unique=unique)

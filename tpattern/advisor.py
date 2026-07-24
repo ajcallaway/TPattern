@@ -109,7 +109,12 @@ def recommend(observations, *, min_count: int = 15,
                        f"(KS p<{uniformity_alpha}){ex_txt}, so the profile-preserving "
                        f"null (N2) was used to isolate cross-event coupling from each "
                        f"type's marginal timing; the rotation null (N1) is reported "
-                       f"alongside to quantify the marginal-timing contribution."),
+                       f"alongside to quantify the marginal-timing contribution. The "
+                       f"two nulls also pose different questions: N1 tests whether any "
+                       f"temporal structure is present, N2 whether events are coupled "
+                       f"beyond their own timing (the usual T-pattern claim), so N2 is "
+                       f"recommended here; choose N1 if your question is only whether "
+                       f"structure exists."),
             plain=("<b>Testing patterns against chance — without being fooled by "
                    "timing.</b> Some actions naturally tend to happen at particular "
                    "points (for example, shots come late in a move), so two actions can "

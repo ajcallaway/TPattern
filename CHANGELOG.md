@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.5 — 2026-07-24
+
+Null comparison: run profile and rotation together and report the difference.
+
+- **`compare_nulls()`** — calibrate one sample under several surrogate nulls and decompose the
+  survivors into a *core* (patterns surviving every null: coupling beyond each event type's own
+  timing) and, for the profile-vs-rotation pair, a *shell* (rotation-only patterns: co-occurrence
+  driven by shared timing, not coordination). The difference between the nulls is the reported
+  result, not either null alone. Returns a `NullComparison` (print for a table, or use `.rows()`,
+  `.common`, `.unique`).
+- **`null_comparison_plot()`** — a grid of which nulls each pattern survives, so the difference
+  reads at a glance.
+- **advisor** — the null recommendation now states the two questions the nulls answer (rotation:
+  is there any temporal structure?; profile: coupling beyond each type's own timing?), so the
+  choice is question-driven as well as data-driven.
+- **`examples/reproduce_worldcup.py`** — adds the settings-sensitivity table (Table 6) under
+  `--calibrate`: the raw count swings with settings while the calibrated headline does not.
+
 ## 0.1.4 — 2026-07-22
 
 Correctness: same-instant duplicate handling, and a fully characterised THEME reproduction.
