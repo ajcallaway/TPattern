@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.6 — 2026-07-27
+
+Bug fix.
+
+- **Fix `report()` crash on a single composite pattern.** `patterns_overview` passed a NumPy axes
+  array to `pattern_dendrogram` when exactly one composite pattern was present (with a two-column
+  grid, `plt.subplots` returns an array even for one plot), raising
+  `AttributeError: 'numpy.ndarray' object has no attribute 'plot'`. Now flattens the axes robustly.
+  This affected the quickstart and any `report()` call whose calibrated set had one composite.
+
 ## 0.1.5 — 2026-07-24
 
 Null comparison: run profile and rotation together and report the difference.

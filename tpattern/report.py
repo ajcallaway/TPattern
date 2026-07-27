@@ -141,10 +141,15 @@ def forest_plot(items, outfile: str, title: str = "Effect sizes (odds ratios)",
     fig, ax = plt.subplots(figsize=(9, 0.6 * n + 1.4))
     ys = list(range(n, 0, -1))          # top-to-bottom in given order
 
-    # fix x-range up front so label anchoring is stable on the log scale
+    # fix x-range up front so label anchoring is stable on the log scale.
+    # An odds-ratio CI can hit 0 or inf when a group has a zero cell, and neither
+    # is a valid limit on a log axis, so fall back to sensible finite bounds.
     los = [it["lo"] for it in items]; his = [it["hi"] for it in items]
+    pos_lo = [x for x in los if x and x > 0]
+    fin_hi = [x for x in his if x not in (float("inf"), float("nan")) and x > 0]
     ax.set_xscale("log")
-    ax.set_xlim(min(los) * 0.7, max(his) * 1.35)
+    ax.set_xlim((min(pos_lo) if pos_lo else 0.1) * 0.7,
+                (max(fin_hi) if fin_hi else 10.0) * 1.35)
     ax.set_ylim(0.3, n + 0.9)
     # label in axes-x (fixed left/right), data-y
     tx = blended_transform_factory(ax.transAxes, ax.transData)

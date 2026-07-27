@@ -99,7 +99,9 @@ def patterns_overview(patterns: list, outfile: str, max_rows: int = 8,
     cols = 2
     rows = (n + cols - 1) // cols
     fig, axes = plt.subplots(rows, cols, figsize=(12, 3.0 * rows))
-    axes = axes.flatten() if n > 1 else [axes]
+    # plt.subplots returns an ndarray whenever rows*cols > 1 (cols is always 2 here,
+    # so even a single pattern yields a 2-axis array); flatten it, else wrap the lone Axes.
+    axes = axes.flatten() if hasattr(axes, "flatten") else [axes]
     for ax, p in zip(axes, comps):
         pattern_dendrogram(p, title=f"N={p.N}, level {p.level}", ci_unit=ci_unit, ax=ax)
     for ax in axes[n:]:
