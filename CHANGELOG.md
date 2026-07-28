@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.7 — 2026-07-27
+
+Readability, and a clearer worked-example flow.
+
+- **`recommend()` output reformatted.** `print(rec)` now prints each setting as its own block — the
+  recommended value on its own line, the reason wrapped beneath it — instead of one run-on line. In
+  notebooks (Colab/Jupyter), displaying the object (`rec` or `display(rec)`) renders a rich view with
+  the **recommended value in bold** and the explanation in normal weight. The plain-text view stays
+  markup-free so it can be pasted verbatim.
+- `methods_text()` is unchanged (a clean single paragraph for pasting into a manuscript); wrap it
+  with `textwrap.fill(...)` for on-screen reading.
+- **Worked-example notebook reordered** so the settings drive the analysis: the settings panel now
+  precedes the run, and the run, null comparison, and bout-support steps all consume the settings you
+  set. Change a setting and re-run to watch the result — including the dendrogram — change.
+
 ## 0.1.6 — 2026-07-27
 
 Bug fix.

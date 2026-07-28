@@ -50,12 +50,55 @@ class Recommendation:
     notes: list[str] = field(default_factory=list)
 
     def __str__(self) -> str:
-        lines = [f"Dataset: {self.n_obs} observations, {self.n_events} events\n"]
+        """Readable plain-text view: each setting, its recommended value, then the
+        wrapped reason. Kept ANSI/markup-free so it can be pasted verbatim."""
+        import textwrap
+        w = 76
+
+        def wrap(text, first, rest):
+            return textwrap.fill(text, width=w, initial_indent=first,
+                                 subsequent_indent=rest)
+
+        out = ["=" * w,
+               f"RECOMMENDED SETTINGS   ({self.n_obs:,} observations, "
+               f"{self.n_events:,} events)",
+               "=" * w]
         for c in self.choices:
-            lines.append(f"[{c.option}]  ->  {c.recommended}\n    {c.rationale}")
+            out += ["", f"  {c.option}  ->  {c.recommended}",
+                    wrap(c.rationale, "     ", "     ")]
         for n in self.notes:
-            lines.append(f"[note]  {n}")
-        return "\n".join(lines)
+            out += ["", wrap(n, "  * ", "    ")]
+        return "\n".join(out)
+
+    def _repr_html_(self) -> str:
+        """Rich rendering in notebooks (Colab/Jupyter): the recommended value in
+        bold, the setting name and explanation in normal weight. Shown when you
+        display the object (a bare `rec` or `display(rec)`); `print(rec)` still
+        gives the plain-text view above."""
+        import html
+
+        def esc(s):
+            return html.escape(str(s))
+
+        rows = "".join(
+            '<div style="margin:0 0 11px 0;">'
+            f'<div><span style="color:#6b7280;">{esc(c.option)}:</span> '
+            f'<strong style="color:#111;">{esc(c.recommended)}</strong></div>'
+            f'<div style="color:#4b5563;margin-top:2px;">{esc(c.rationale)}</div>'
+            '</div>'
+            for c in self.choices)
+        notes = ""
+        if self.notes:
+            lis = "".join(f'<li style="color:#4b5563;margin:2px 0;">{esc(n)}</li>'
+                          for n in self.notes)
+            notes = f'<ul style="margin:6px 0 0 0;padding-left:18px;">{lis}</ul>'
+        return (
+            '<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;'
+            'font-size:13px;line-height:1.5;max-width:780px;">'
+            '<div style="font-weight:600;font-size:14px;margin-bottom:8px;'
+            'padding-bottom:5px;border-bottom:1px solid #e5e7eb;">'
+            f'Recommended settings &nbsp;&middot;&nbsp; {self.n_obs:,} observations, '
+            f'{self.n_events:,} events</div>{rows}{notes}</div>')
 
     def methods_text(self) -> str:
         """A ready-to-adapt Methods paragraph, grounded in the measured values."""
