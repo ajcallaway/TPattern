@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.9 — 2026-07-28
+
+`read_table` reads the schema it documents, with no arguments.
+
+- **`end`, `obs_start`, `obs_end` now default to their conventional column names** (`"end"`,
+  `"obs_start"`, `"obs_end"`) instead of `None`. A table that includes those columns — e.g.
+  OpenTag.Studio's Research CSV export — is now read correctly by `read_table("file.csv")` with **no
+  arguments**, including the real observation window (the `T = obs_end - obs_start` denominator of
+  the NX/T baseline). Columns that are absent are ignored silently, so files without them fall back
+  to the first/last event exactly as before, and passing explicit column names is unchanged.
+
 ## 0.1.8 — 2026-07-28
 
 Read SOF-CODER / THEME data directly.

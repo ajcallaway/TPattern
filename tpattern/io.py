@@ -116,8 +116,8 @@ def read_sample(folder: str | Path, pattern: str = "*.txt") -> list[Observation]
 
 def read_table(path: str | Path, *, observation: str = "observation",
                event: str = "event", start: str = "start",
-               end: str | None = None, obs_start: str | None = None,
-               obs_end: str | None = None, build_event_from: list[str] | None = None,
+               end: str | None = "end", obs_start: str | None = "obs_start",
+               obs_end: str | None = "obs_end", build_event_from: list[str] | None = None,
                time_unit: str = "s", sep: str = ",") -> list[Observation]:
     """Read the canonical flat event table (see SCHEMA.md) into a sample.
 
@@ -135,11 +135,14 @@ def read_table(path: str | Path, *, observation: str = "observation",
         taken from the min/max event `start`.
     obs_start, obs_end : str, optional
         Columns giving the *observation window* (constant within an observation).
-        Supply these when the unit has real bounds that extend beyond its first and
-        last event — a possession, rally or bout usually does. The window length
-        T = obs_end - obs_start is the denominator of the NX/T baseline, so deriving
-        it from the events instead will shift every baseline probability. If absent,
-        the window falls back to the first/last event time.
+        These default to the conventional column names ("obs_start"/"obs_end"), so a
+        table that includes them is read correctly with **no arguments**; they are
+        ignored silently if the columns are absent. Supply a window when the unit has
+        real bounds that extend beyond its first and last event — a possession, rally
+        or bout usually does. The window length T = obs_end - obs_start is the
+        denominator of the NX/T baseline, so deriving it from the events instead will
+        shift every baseline probability. If absent, the window falls back to the
+        first/last event time.
     build_event_from : list[str], optional
         If given, the event code is built by joining these columns with '_'
         (for coders who keep the code split across descriptor columns) instead of
