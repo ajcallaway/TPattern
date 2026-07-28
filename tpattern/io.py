@@ -212,3 +212,89 @@ def read_table(path: str | Path, *, observation: str = "observation",
             o_end = max(ends_by_obs[obs_id]) if ends_by_obs.get(obs_id) else evs[-1][0]
         sample.append(Observation(name=obs_id, start=o_start, end=o_end, events=evs))
     return sample
+
+
+def read_sofcoder(path: str | Path, *, dataname: str = "DATANAME",
+                  t: str = "T", events: str = "Events", sep: str | None = None,
+                  code_sep: str = ",", frames_per_second: float | None = None,
+                  start_marker: str = ":", end_marker: str = "&") -> list[Observation]:
+    """Read a SOF-CODER / THEME data file (DATANAME, T, Events) into a sample.
+
+    SOF-CODER (Jonsson et al., 2006) exports one row per time frame, each row
+    carrying several comma-separated category codes active at that frame (its
+    multi-criteria "field format"). This reader explodes each row so every code
+    becomes one event at time ``T``; codes that share a frame are co-timed, and
+    ``min_lag``/``collapse_duplicates`` then decide how co-occurrence is treated.
+    Each ``DATANAME`` becomes one :class:`Observation`. Rows whose Events field is
+    the start (``:``) or end (``&``) marker set the observation window
+    ``[start, end]`` (``T = end - start`` is the NX/T baseline denominator); if the
+    markers are absent the window falls back to the first/last event.
+
+    The outer column delimiter is auto-detected (tab if present, else any
+    whitespace) unless ``sep`` is given; ``code_sep`` splits the Events field
+    (default ``','``). ``T`` is kept in the file's native frame unit unless
+    ``frames_per_second`` is supplied, in which case frames are converted to
+    milliseconds. A header row naming the columns is used if present, else the
+    columns are taken positionally as (DATANAME, T, Events).
+
+    This is the on-ramp for data collected in the SOF-CODER/THEME ecosystem; for
+    a coder that already exports one row per single event, use :func:`read_table`.
+    """
+    path = Path(path)
+    scale = (1000.0 / frames_per_second) if frames_per_second else 1.0
+
+    def split_row(line: str) -> list[str]:
+        if sep is not None:
+            parts = line.split(sep)
+        elif "\t" in line:
+            parts = line.split("\t")
+        else:
+            parts = line.split(None, 2)   # DATANAME, T, Events (Events holds no spaces)
+        return [p.strip() for p in parts]
+
+    with open(path, newline="") as fh:
+        lines = [ln.strip() for ln in fh if ln.strip()]
+    if not lines:
+        return []
+
+    header = [h.lower() for h in split_row(lines[0])]
+    if dataname.lower() in header and events.lower() in header:
+        di, ti, ei = (header.index(dataname.lower()), header.index(t.lower()),
+                      header.index(events.lower()))
+        body = lines[1:]
+    else:
+        di, ti, ei, body = 0, 1, 2, lines   # positional fallback
+
+    rows_by_obs: dict[str, list] = defaultdict(list)
+    starts: dict[str, int] = {}
+    ends: dict[str, int] = {}
+    for line in body:
+        parts = split_row(line)
+        if len(parts) <= max(di, ti, ei):
+            continue
+        obs_id = parts[di]
+        if not obs_id:
+            continue
+        try:
+            tv = int(round(float(parts[ti]) * scale))
+        except (ValueError, TypeError):
+            continue
+        raw = parts[ei]
+        if raw == start_marker:
+            starts.setdefault(obs_id, tv)
+            continue
+        if raw == end_marker:
+            ends[obs_id] = tv
+            continue
+        for code in raw.split(code_sep):
+            code = code.strip()
+            if code and code not in (start_marker, end_marker):
+                rows_by_obs[obs_id].append((tv, code))
+
+    sample: list[Observation] = []
+    for obs_id, evs in rows_by_obs.items():
+        evs.sort(key=lambda e: e[0])
+        o_start = starts.get(obs_id, evs[0][0])
+        o_end = ends.get(obs_id, evs[-1][0])
+        sample.append(Observation(name=obs_id, start=o_start, end=o_end, events=evs))
+    return sample

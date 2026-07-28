@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.8 — 2026-07-28
+
+Read SOF-CODER / THEME data directly.
+
+- **`read_sofcoder()`** — ingest a SOF-CODER / THEME `DATANAME, T, Events` data file (Jonsson et al.,
+  2006). Each frame's comma-separated multi-criteria codes are exploded into co-timed events, each
+  `DATANAME` becomes an `Observation`, and the `:` / `&` markers set the observation window (the NX/T
+  denominator). The delimiter is auto-detected (tab or whitespace); an optional `frames_per_second`
+  converts frames to milliseconds. This lets tpattern analyse data collected anywhere in the
+  SOF-CODER/THEME ecosystem, not only newly-coded tables — complementing `read_table` (one row per
+  event) for OpenTag, SportsCode and spreadsheet exports.
+
 ## 0.1.7 — 2026-07-27
 
 Readability, and a clearer worked-example flow.
