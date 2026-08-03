@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.1.11 — 2026-08-03
+
+Report the temporal content, and a fuller default output set.
+
+- **Observed timing is now reported for every pattern.** Each pattern occurrence has a
+  start, end and duration (`end - start`); for a two-event pattern that is the lag from
+  the first event to the second. `patterns_table` now carries `duration_median_ms`,
+  `duration_iqr_ms` and `duration_range_ms`, the plain-English verdict states the median
+  lag in words, and the dendrogram annotates each join with its **median** timing (with
+  the critical interval shown smaller beneath). This is the temporal information the
+  method computes but T-pattern reporting usually leaves buried — THEME exposes it only
+  as an on-demand "Pattern Duration" export; here it is summarised and on by default, for
+  significant and non-significant patterns alike, so a reader can weigh practical
+  relevance themselves. No practical-importance threshold (MCID/MDC) is claimed; the
+  descriptive timing and the statistical test are reported separately.
+- **Units are labelled** everywhere (ms), fixing an interval printed without a unit.
+- **New default tables**, reproducing the useful THEME "Generate Tables" exports but
+  emitted by default: `pattern_durations()` (one row per occurrence), `event_type_roles()`
+  (how often each type is first / inner / last in patterns), `connections()` (what follows
+  what), and `data_summary()` (per-type counts, prevalence and rate before detection).
+- **New figures**: `duration_plot()` (a pattern's temporal signature — the spread of its
+  occurrence durations) and `occurrence_plot()` (when each event type occurs within its
+  observation). Opt-in `interval_counts()` supports before/after-split phase analysis.
+- **`report()` emits all of the above by default** (pass `observations=` for the data
+  summary and occurrence plot).
+- **Figures share a customisable style** (`tpattern.viz.STYLE`): colours, fonts, grid and
+  resolution live in one dict a user can edit to restyle every plot without touching the
+  plotting code.
+
 ## 0.1.10 — 2026-08-03
 
 Read your own, un-cleaned data with plain-language feedback.

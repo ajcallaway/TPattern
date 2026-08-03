@@ -6,7 +6,7 @@ behavior: T-patterns and their detection. Behavior Research Methods,
 Instruments, & Computers, 32(1), 93-110.
 """
 
-__version__ = "0.1.10"   # defined before submodule imports (methods.py reads it)
+__version__ = "0.1.11"   # defined before submodule imports (methods.py reads it)
 
 from .io import (Observation, read_observation, read_sample, read_table,
                  read_sofcoder, DataFormatError, check_reference, CHECKS)
@@ -15,9 +15,11 @@ from .ci import find_critical_interval, CIResult
 from .detect import Config, Engine
 from .randomise import run_null, NullResult, rotate, shuffle
 from .significance import calibrate, CalibrationResult, compare_nulls, NullComparison
-from .report import patterns_table, forest_plot, report
+from .report import (patterns_table, forest_plot, report, interpret, duration_stats,
+                     pattern_durations, event_type_roles, connections, data_summary,
+                     interval_counts)
 from .viz import (pattern_dendrogram, patterns_overview, support_profile,
-                  null_comparison_plot)
+                  null_comparison_plot, occurrence_plot, duration_plot, STYLE)
 from .advisor import recommend
 from .methods import methods_text
 from .guided import run_analysis, launch
@@ -31,7 +33,9 @@ __all__ = [
     "Config", "Engine",
     "run_null", "NullResult", "rotate", "shuffle",
     "calibrate", "CalibrationResult",
-    "patterns_table", "forest_plot", "report",
+    "patterns_table", "forest_plot", "report", "interpret", "duration_stats",
+    "pattern_durations", "event_type_roles", "connections", "data_summary",
+    "interval_counts", "occurrence_plot", "duration_plot", "STYLE",
     "pattern_dendrogram", "patterns_overview", "support_profile",
     "recommend", "methods_text",
     "run_analysis", "launch",

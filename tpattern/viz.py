@@ -10,11 +10,48 @@ cramped detection tree; here it is a clean, labelled figure.
 
 from __future__ import annotations
 
+import statistics as _stat
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from .pattern import Pattern
+
+
+# --------------------------------------------------------------------- styling
+# One place to change how every figure looks. Edit these values (or set them at
+# run time, e.g. `tpattern.viz.STYLE["accent"] = "#0b7285"`) to restyle all plots
+# without touching the plotting code — colours, fonts, grid and resolution are all
+# read from here. Kept deliberately small and legible so it is easy to customise.
+STYLE = {
+    "node":     "#2980b9",   # event-type leaf markers
+    "line":     "#34495e",   # dendrogram links
+    "interval": "#c0392b",   # timing annotations
+    "accent":   "#4a6fa5",   # primary bar/point colour
+    "accent2":  "#c07a3e",   # secondary group colour
+    "muted":    "#8a93a3",   # captions, secondary text
+    "text":     "#1a1c22",   # primary text
+    "grid":     "#dfe3e8",   # gridlines
+    "font_size": 8.0,
+    "title_size": 10.5,
+    "dpi": 150,
+}
+
+
+def _tidy(ax, *, grid_axis=None):
+    """Apply the shared look to an Axes: drop the top/right frame, optional soft grid."""
+    ax.spines[["top", "right"]].set_visible(False)
+    if grid_axis:
+        ax.grid(axis=grid_axis, color=STYLE["grid"], lw=0.7, zorder=0)
+    ax.tick_params(labelsize=STYLE["font_size"] - 0.5)
+    return ax
+
+
+def _median_duration(p):
+    """Median of a (sub)pattern's occurrence durations in ms, or None."""
+    ds = [i.end - i.start for i in p.instances]
+    return round(_stat.median(ds)) if ds else None
 
 
 def _layout(p: Pattern, leaves: list, pos: dict):
@@ -41,14 +78,20 @@ def _draw(p: Pattern, pos: dict, ax, ci_unit: str):
     for child in (p.left, p.right):
         cx, cd = pos[id(child)]
         # elbow: up from child to this node's depth, then across
-        ax.plot([cx, cx], [cd, d], color="#34495e", lw=1.4)
-        ax.plot([cx, x], [d, d], color="#34495e", lw=1.4)
+        ax.plot([cx, cx], [cd, d], color=STYLE["line"], lw=1.4)
+        ax.plot([cx, x], [d, d], color=STYLE["line"], lw=1.4)
         _draw(child, pos, ax, ci_unit)
-    # annotate the critical interval on the join
+    # annotate the join with the OBSERVED median timing (the interpretable value) and,
+    # smaller, the critical interval it was accepted within.
+    med = _median_duration(p)
+    if med is not None:
+        ax.annotate(f"~{med} {ci_unit}".strip(), (x, d), textcoords="offset points",
+                    xytext=(0, 5), ha="center", fontsize=7, fontweight="bold",
+                    color=STYLE["interval"])
     if p.ci is not None:
         d1, d2 = p.ci
-        ax.annotate(f"[{d1},{d2}]{ci_unit}", (x, d), textcoords="offset points",
-                    xytext=(0, 4), ha="center", fontsize=7, color="#c0392b")
+        ax.annotate(f"[{d1},{d2}]", (x, d), textcoords="offset points",
+                    xytext=(0, -9), ha="center", fontsize=6, color=STYLE["muted"])
 
 
 def pattern_dendrogram(pattern: Pattern, title: str | None = None,
@@ -70,7 +113,7 @@ def pattern_dendrogram(pattern: Pattern, title: str | None = None,
 
     # leaf labels
     for i, name in enumerate(leaves):
-        ax.plot([i], [0], "o", color="#2980b9", ms=6)
+        ax.plot([i], [0], "o", color=STYLE["node"], ms=6)
         ax.annotate(name, (i, 0), textcoords="offset points", xytext=(0, -8),
                     ha="right", va="top", rotation=35, fontsize=8)
 
@@ -274,3 +317,80 @@ def null_comparison_plot(comparison, outfile, title=None, max_rows=25):
     fig.savefig(outfile)
     plt.close(fig)
     return ordered
+
+
+def occurrence_plot(observations, outfile: str, title: str | None = None,
+                    max_types: int = 25):
+    """When does each event type happen? A strip plot of every occurrence's position
+    within its observation (0 = start of the window, 1 = end), one row per event type,
+    with the median marked. This is THEME's event-type occurrence view, and it shows
+    directly whether a type clusters early or late — the same structure the
+    conditional-uniformity diagnostic tests. Returns the event types plotted."""
+    from collections import defaultdict
+    pos = defaultdict(list)
+    for o in observations:
+        T = (o.end - o.start) or 1
+        for t, ev in o.events:
+            pos[ev].append((t - o.start) / T)
+    types = sorted(pos, key=lambda e: _stat.median(pos[e]))
+    types = types[:max_types]
+    n = len(types)
+    fig, ax = plt.subplots(figsize=(7.5, max(2.0, 0.32 * n + 1.0)), dpi=STYLE["dpi"])
+    for y, ev in enumerate(types):
+        xs = pos[ev]
+        ax.scatter(xs, [y] * len(xs), s=10, color=STYLE["accent"], alpha=0.35,
+                   edgecolors="none", zorder=2)
+        ax.plot([_stat.median(xs)], [y], "|", color=STYLE["interval"], ms=16,
+                mew=2.2, zorder=3)
+    ax.set_yticks(range(n)); ax.set_yticklabels(types, fontsize=STYLE["font_size"] - 1)
+    ax.set_xlim(-0.02, 1.02); ax.set_xlabel("position within observation (0 = start, 1 = end)",
+                                            fontsize=STYLE["font_size"])
+    ax.set_ylim(-0.6, n - 0.4)
+    _tidy(ax, grid_axis="x")
+    ax.set_title(title or "When each event type occurs", fontsize=STYLE["title_size"],
+                 fontweight="bold")
+    fig.text(0.99, 0.005, "red mark = median position", ha="right",
+             fontsize=STYLE["font_size"] - 1.5, color=STYLE["muted"])
+    fig.tight_layout(); fig.savefig(outfile); plt.close(fig)
+    return types
+
+
+def duration_plot(source, outfile: str, title: str | None = None, max_rows: int = 8,
+                  ci_unit: str = "ms"):
+    """Temporal signature of each pattern: a strip of its occurrence durations (ms),
+    one row per pattern, median marked. Turns 'N=14, q=.006' into a picture of *when*
+    the later event lands relative to the earlier. Returns the patterns plotted."""
+    from .significance import CalibrationResult
+    if isinstance(source, CalibrationResult):
+        pats = [c.pattern for c in source.real]
+    else:
+        pats = [p for p in source if p.level >= 1]
+    pats = sorted(pats, key=lambda p: -p.N)[:max_rows]
+    pats = [p for p in pats if p.instances]
+    n = len(pats)
+    if not n:
+        fig, ax = plt.subplots(figsize=(6, 2), dpi=STYLE["dpi"])
+        ax.text(0.5, 0.5, "No patterns to plot.", ha="center", va="center")
+        ax.axis("off"); fig.savefig(outfile); plt.close(fig); return []
+    fig, ax = plt.subplots(figsize=(7.5, max(2.0, 0.5 * n + 1.0)), dpi=STYLE["dpi"])
+    labels = []
+    for y, p in enumerate(pats):
+        ds = sorted(i.end - i.start for i in p.instances)
+        ax.scatter(ds, [y] * len(ds), s=22, color=STYLE["accent"], alpha=0.5,
+                   edgecolors="none", zorder=2)
+        med = _stat.median(ds)
+        ax.plot([med], [y], "|", color=STYLE["interval"], ms=18, mew=2.4, zorder=3)
+        ax.annotate(f"~{round(med)} {ci_unit}", (med, y), textcoords="offset points",
+                    xytext=(0, 7), ha="center", fontsize=STYLE["font_size"] - 1.5,
+                    color=STYLE["interval"])
+        sig = p.signature()
+        labels.append(sig if len(sig) <= 40 else sig[:37] + "...")
+    ax.set_yticks(range(n)); ax.set_yticklabels(labels, fontsize=STYLE["font_size"] - 1)
+    ax.set_ylim(-0.6, n - 0.2)
+    ax.set_xlabel(f"pattern occurrence duration ({ci_unit})", fontsize=STYLE["font_size"])
+    ax.set_xlim(left=0)
+    _tidy(ax, grid_axis="x")
+    ax.set_title(title or "Temporal signature (duration of each pattern's occurrences)",
+                 fontsize=STYLE["title_size"], fontweight="bold")
+    fig.tight_layout(); fig.savefig(outfile); plt.close(fig)
+    return pats
