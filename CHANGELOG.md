@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.10 — 2026-08-03
+
+Read your own, un-cleaned data with plain-language feedback.
+
+- **`read_table` now checks the data and explains what it finds.** Instead of silently
+  dropping unusable rows, it runs a set of checks and reports, in plain language, what was
+  found, how much of the file was affected (as a percentage), and how to fix it. Each check
+  has a stable code: `E` codes stop the read (something must be fixed first) and raise the new
+  **`DataFormatError`**; `W` codes are warnings (the data loads, but rows were left out or a
+  label is ambiguous); `I` codes are information (nothing lost — e.g. the effective sample, a
+  dominant event type, a high same-timestamp fraction). By default the report prints only when
+  there is a warning or error to act on; pass `report="all"` to see the information notes too,
+  or `report=False` to silence it. The clean-data path is unchanged, so existing analyses read
+  byte-identically. A UTF-8 byte-order mark (Excel) is stripped automatically.
+- **`DataFormatError`, `check_reference()` and `CHECKS`** are exported. `CHECKS` is the single
+  registry the runtime messages and the tutorial's Appendix A are both generated from, so the
+  paper and the software cannot drift apart.
+- **`methods_text()` now reports the effective sample** — how many observations contained at
+  least two events (and could host a pattern) alongside the number submitted — so a Methods
+  statement cannot overstate what was analysed.
+
 ## 0.1.9 — 2026-07-28
 
 `read_table` reads the schema it documents, with no arguments.

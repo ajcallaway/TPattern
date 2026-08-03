@@ -48,6 +48,16 @@ def methods_text(config, *, observations=None, calibration=None,
         T = sum(max(o.end - o.start, 1) for o in observations)
         s.append(f"The sample comprised {n_obs} observations containing {n_ev} "
                  f"event occurrences over {T} time units of total observation window.")
+        # Report the effective sample: how many observations can actually host a
+        # pattern (two or more events). The rest still set the baseline rates, so
+        # they are not discarded, but reporting only the submitted count would
+        # overstate what was analysed.
+        n_host = sum(1 for o in observations if len(o.events) >= 2)
+        if n_host < n_obs:
+            s.append(f"Of these, {n_host} observations contained at least two events and "
+                     f"could therefore contain a pattern; the remaining {n_obs - n_host} "
+                     f"contributed to the baseline event rates but could not themselves "
+                     f"host a detected pattern.")
 
     # --- core detection ---
     s.append(
