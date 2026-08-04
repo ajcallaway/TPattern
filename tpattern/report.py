@@ -102,8 +102,8 @@ def patterns_table(source, outfile: str | None = None, ci_unit: str = "ms",
     """Build a results table from a list of `Pattern` or a `CalibrationResult`.
 
     Returns a list of row dicts. If `outfile` is given, also writes CSV.
-    When given a CalibrationResult, includes p_emp, fdr_q, fwer_keep and sorts by
-    p_emp; otherwise sorts by N (descending).
+    When given a CalibrationResult, includes monte_carlo_p, fdr_q, survives_fwer_holm and sorts by
+    monte_carlo_p; otherwise sorts by N (descending).
 
     Every row carries `bouts` (distinct observations the pattern spans) and
     `bout_support` (that as a fraction of the sample). Prevalence is reported rather
@@ -141,19 +141,23 @@ def patterns_table(source, outfile: str | None = None, ci_unit: str = "ms",
             "duration_range_ms": f"[{dur['min']},{dur['max']}]" if dur else None,
         }
         if calibrated:
-            row["p_emp"] = round(it.p_emp, 4)
+            # readable column names (see tpattern/reference.py); the internal
+            # Calibrated attributes (p_emp, fwer_keep) keep their names.
+            row["monte_carlo_p"] = round(it.p_emp, 4)
             row["fdr_q"] = round(it.fdr_q, 4)
-            row["fwer_keep"] = int(it.fwer_keep)
+            row["survives_fwer_holm"] = int(it.fwer_keep)
             row["analytic_strength"] = round(it.strength, 2)  # -log10(analytic p); comparison only
             row["interpretation"] = interpret(p, it.N, it.fdr_q, ci_unit=ci_unit, dur=dur)
         rows.append(row)
 
     key = sort
     if sort == "auto":
-        key = "p_emp" if calibrated else "N"
+        key = "monte_carlo_p" if calibrated else "N"
+    if key in ("p_emp", "fwer_keep"):        # tolerate the old names
+        key = {"p_emp": "monte_carlo_p", "fwer_keep": "survives_fwer_holm"}[key]
     if key == "N":
         rows.sort(key=lambda r: (-r["N"], r["level"]))
-    elif key in ("p_emp", "fdr_q") and calibrated:
+    elif key in ("monte_carlo_p", "fdr_q") and calibrated:
         rows.sort(key=lambda r: (r[key], -r["N"]))
 
     if outfile:
@@ -400,6 +404,6 @@ def report(source, outdir: str, *, ci_unit: str = "ms", title: str = "T-pattern 
         for r in rows[:15]:
             line = f"  N={r['N']:>3}  L{r['level']}  {r['pattern']}"
             if calibrated:
-                line += f"   p_emp={r['p_emp']}  q={r['fdr_q']}"
+                line += f"   monte_carlo_p={r['monte_carlo_p']}  q={r['fdr_q']}"
             fh.write(line + "\n")
     return written

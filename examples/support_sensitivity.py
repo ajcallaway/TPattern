@@ -102,7 +102,7 @@ def run_one(observations, frac, n_bouts):
             "N": c.N,
             "bouts": n_bt,
             "support": supp,
-            "p_emp": c.p_emp,
+            "monte_carlo_p": c.p_emp,
             "q": c.fdr_q,
         })
     return {"frac": frac, "detected": len(detected),
@@ -146,7 +146,7 @@ def main(path, time_unit="s", obs_start=None, obs_end=None):
         for row in r["rows"]:
             print(f"  {row['signature']:<50} N={row['N']:>3}  "
                   f"bouts={row['bouts']:>3} ({row['support']:.1%})  "
-                  f"p={row['p_emp']:.4f}  q={row['q']:.3f}")
+                  f"p={row['monte_carlo_p']:.4f}  q={row['q']:.3f}")
 
     # Stability: which patterns survive at EVERY threshold? Those are the ones
     # whose reportability does not depend on the choice.

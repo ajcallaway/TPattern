@@ -104,8 +104,8 @@ def _write_excel(result, q_target, path):
         rows.append({
             "pattern": str(c.pattern), "N": c.N, "level": c.level,
             "critical_interval": f"[{c.ci[0]},{c.ci[1]}]" if c.ci else "",
-            "p_empirical": round(c.p_emp, 4), "q_FDR": round(c.fdr_q, 4),
-            "survives_FDR": int(c.fdr_q <= q_target), "survives_FWER": int(c.fwer_keep),
+            "monte_carlo_p": round(c.p_emp, 4), "fdr_q": round(c.fdr_q, 4),
+            "survives_fdr": int(c.fdr_q <= q_target), "survives_fwer_holm": int(c.fwer_keep),
         })
     try:
         import pandas as pd

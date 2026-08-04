@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.12 — 2026-08-04
+
+Readable names, and one reference for every setting and output.
+
+- **`tpattern/reference.py` is a single registry** for every setting and output column,
+  each with what it does, its range, the recommended value, and what higher/lower means.
+  Everything is generated from it: `explain("min_lag")` / `explain_settings()` /
+  `explain_columns()` in code, the new **`PARAMETERS.md`**, the tutorial's settings and
+  output-column tables, and the plain-language field labels in the Colab form — so the
+  code, the paper and the notebook cannot drift (the same pattern as `CHECKS`).
+- **The two opaque output columns are renamed** for readability: `p_emp` →
+  **`monte_carlo_p`** and `fwer_keep` → **`survives_fwer_holm`** (`fdr_q` and the rest were
+  already legible). The internal `Calibrated` attributes are unchanged; `patterns_table`'s
+  `sort=` still accepts the old names.
+- **The Colab settings form now describes each field** in plain English, so the
+  checkboxes and numbers are no longer bare variable names.
+- `explain`, `explain_settings`, `explain_columns`, `parameters_markdown`, `SETTINGS`
+  and `COLUMNS` are exported.
+
 ## 0.1.11 — 2026-08-03
 
 Report the temporal content, and a fuller default output set.
