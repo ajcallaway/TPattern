@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.13 — 2026-08-05
+
+Getting started, and templates to adapt.
+
+- **`new_analysis()` writes a copy-and-adapt starter script** so a learner can go from the
+  tutorial to their own data: load, inspect, `recommend()`, configure, calibrate, report, with
+  every line to change marked `# <-- EDIT` and a pointer to `explain()` for each setting. Three
+  variants (`new_analysis(template=...)`): **`basic`** (one group), **`two_groups`** (compare two
+  groups with odds ratios and a forest plot), and **`null_choice`** (core vs shell — which null a
+  pattern survives). All three also ship under `examples/` and are exported as `new_analysis`.
+- **README rewritten around the user.** A one-minute *Getting started* (install →
+  `new_analysis()` → edit → run) and a *What you get* summary of the recent developments:
+  forgiving data import, the chance model, temporal reporting, readable output, the single
+  reference behind `explain()`/`PARAMETERS.md`, and the shared figure style.
+
 ## 0.1.12 — 2026-08-04
 
 Readable names, and one reference for every setting and output.
@@ -18,6 +33,7 @@ Readable names, and one reference for every setting and output.
   checkboxes and numbers are no longer bare variable names.
 - `explain`, `explain_settings`, `explain_columns`, `parameters_markdown`, `SETTINGS`
   and `COLUMNS` are exported.
+
 
 ## 0.1.11 — 2026-08-03
 
