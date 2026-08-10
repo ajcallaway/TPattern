@@ -14,7 +14,7 @@ auditable code — the same critical-interval method the THEME software applies 
 [The method it implements](#the-method-it-implements)) — and is the analysis
 companion to the [OpenTag.Studio](https://opentag.studio) tagging tool.
 
-## Two ways to use it
+## Three ways to use it
 
 ### 🚀 In your browser — Google Colab, no install, no coding
 
@@ -35,6 +35,15 @@ Three notebooks (all in [`colab/`](colab/)):
 ### 🐍 As a Python library
 
 `pip install tpattern` and script it — see [Getting started](#getting-started-in-a-minute), [Quickstart](#quickstart) and [`examples/`](examples/).
+
+### 📊 From R
+
+R users (common in psychology and behavioural science) can drive the **same
+engine** via [`reticulate`](https://rstudio.github.io/reticulate/) — the algorithm
+stays in Python, so results match exactly. Install with
+`remotes::install_github("ajcallaway/TPattern", subdir = "r")`, then run the whole
+analysis in one call: `tpattern_analysis("events.csv")`. See
+[Using tpattern from R](#using-tpattern-from-r).
 
 Bring your own data (one row per event — see [`SCHEMA.md`](SCHEMA.md)) or try the
 included [`data/`](data/) example.

@@ -6,7 +6,7 @@ against chance, and get a plain-English report. All in your browser.
 
 ## Open a notebook
 
-Click the badge in the [main README](../README.md#two-ways-to-use-it), or in Colab
+Click the badge in the [main README](../README.md#three-ways-to-use-it), or in Colab
 use **File → Upload notebook** and choose one of:
 
 - **`tpattern_guided_analysis.ipynb`** — recommended. Installs tpattern from GitHub,
