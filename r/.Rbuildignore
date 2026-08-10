@@ -8,3 +8,4 @@
 ^Meta$
 ^\.Rapp\.history$
 ^\.Rhistory$
+^cran-comments\.md$
