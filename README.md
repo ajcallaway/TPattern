@@ -1,20 +1,39 @@
 # tpattern — open, auditable analysis of recurring patterns in event sequences
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ajcallaway/TPattern/blob/main/colab/tpattern_guided_analysis.ipynb)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21397543.svg)](https://doi.org/10.5281/zenodo.21397543)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21397543-1682D4.svg)](https://doi.org/10.5281/zenodo.21397543)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 `tpattern` detects recurring temporal patterns (T-patterns; Magnusson, 2000) in
 **any sequence of timed, labelled events** — behaviour, sport, clinical or
 physiological logs, interaction data — validates them properly against chance, and
 produces clean, publication-ready output (tables, figures, pattern dendrograms). It
-is a free, transparent, reproducible alternative to the THEME software, and the
-analysis companion to the [OpenTag.Studio](https://opentag.studio) tagging tool.
+implements the published T-pattern detection algorithm (Magnusson, 2000) as free,
+auditable code — the same critical-interval method the THEME software applies (see
+[The method it implements](#the-method-it-implements)) — and is the analysis
+companion to the [OpenTag.Studio](https://opentag.studio) tagging tool.
 
 ## Two ways to use it
 
-- 🚀 **Google Colab — no coding.** [**Open the guided notebook in Colab**](https://colab.research.google.com/github/ajcallaway/TPattern/blob/main/colab/tpattern_guided_analysis.ipynb): upload your events, follow the guided steps, download a report with a plain-English verdict for every pattern and a paste-ready Methods paragraph. See [`colab/`](colab/).
-- 🐍 **Python library.** `pip install` and script it — see [Quickstart](#quickstart) and [`examples/`](examples/).
+### 🚀 In your browser — Google Colab, no install, no coding
+
+Open a guided notebook, upload your events CSV, and it walks you through four steps —
+**upload → inspect → the recommended settings appear → run** — then hands back a full
+report inline and as a downloadable zip: a colour-coded results table with a
+plain-English verdict for every pattern (🟢 robust · 🟡 borderline · ⚪ likely chance),
+the pattern dendrograms, the code to restyle them, and a paste-ready Methods paragraph.
+No data of your own yet? Point it at [`data/worldcup_goals.csv`](data/worldcup_goals.csv)
+(choose **ms** for the time unit).
+
+Three notebooks (all in [`colab/`](colab/)):
+
+- [**Guided analysis**](https://colab.research.google.com/github/ajcallaway/TPattern/blob/main/colab/tpattern_guided_analysis.ipynb) — **recommended.** Installs the latest `tpattern` and opens the guided panel. This is the one the badge above opens.
+- **Guided analysis (offline)** — the package is bundled inside the notebook (a snapshot), so it runs where you can't install from GitHub. Open `colab/tpattern_guided_analysis_offline.ipynb` via **File → Upload notebook**.
+- **Worked example** — the companion to the tutorial paper. Runs the load → inspect → recommend → calibrate → report walk-through on the shipped World Cup goal sequences, cell by cell, so you can follow the whole analysis and then swap in your own data (`colab/tpattern_worked_example.ipynb`).
+
+### 🐍 As a Python library
+
+`pip install tpattern` and script it — see [Getting started](#getting-started-in-a-minute), [Quickstart](#quickstart) and [`examples/`](examples/).
 
 Bring your own data (one row per event — see [`SCHEMA.md`](SCHEMA.md)) or try the
 included [`data/`](data/) example.
@@ -73,23 +92,46 @@ print(explain("fdr_q"))      # what an output column means
 - **Clean figures** — dendrograms, temporal signatures, forest plots — that share one
   customisable style (`tpattern.viz.STYLE`).
 
-## Why it exists
+## The method it implements
 
-T-pattern analysis finds behaviourally meaningful structure that event counts and 
-simple transition tables miss. It is most established through Magnusson's THEME
-software, the reference implementation. `tpattern` is an open, complementary
-implementation that reproduces THEME's detection and adds a reproducible chance
-model and clear reporting:
+T-pattern analysis (Magnusson, 1996, 2000, 2019) finds behaviourally meaningful
+structure that event counts and simple transition tables miss: event types that
+recur in the same order, separated by statistically consistent time intervals, more
+often than chance predicts. `tpattern` implements the algorithm exactly as published,
+in auditable code:
 
-- **reproduces** THEME's core detection (critical intervals, NX/T baseline,
-  completeness competition) — validated to the pattern for published datasets;
-- **adds a chance model** — every pattern is tested against a surrogate null, with
-  p-values **corrected for repeated testing** (false-discovery rate and
-  family-wise);
-- **handles concurrency explicitly** — events sharing a timestamp are treated as
+- **Critical-interval detection.** For an ordered pair of event types (A, B) it
+  searches for the time window after A within which B follows more often than B's
+  overall rate would predict. Significance is the **upper-tail binomial** probability
+  of the observed number of A→B matches, evaluated against that baseline rate (B's
+  occurrences spread over the observation length — the *NX/T* baseline), thresholded
+  at α (default 0.005). This is the critical-interval test set out in Magnusson (2000)
+  and the THEME manual.
+- **Free search, one-to-one matching, distinct tokens.** A free search selects the
+  largest significant interval; occurrences are matched one-to-one by the greedy
+  procedure the algorithm specifies; a pattern must be built from distinct event
+  tokens.
+- **Bottom-up hierarchy with completeness competition.** Patterns are grown level by
+  level, longer patterns competing with their sub-patterns so that only the most
+  complete survive.
+
+On top of the published detection, `tpattern` adds what the method has historically
+lacked:
+
+- **a proper chance model** — every detected pattern is tested against a surrogate
+  null, with p-values **corrected for repeated testing** (Benjamini–Hochberg FDR for
+  screening, Holm family-wise for confirmatory claims), stratified by level;
+- **explicit concurrency handling** — events sharing a timestamp are reported as
   co-occurrence rather than sequence;
-- **reports clearly** — tidy tables, effect sizes with confidence intervals,
+- **clear reporting** — tidy tables, effect sizes with confidence intervals,
   purposeful figures, and clean **dendrograms** of the detected patterns.
+
+The reference software for this method is THEME (PatternVision Ltd), with **SOF-CODER**
+(Jonsson et al., 2006) as its coding front end. `tpattern` reads that ecosystem
+directly — `read_sofcoder` ingests SOF-CODER/THEME (`DATANAME, T, Events`) files — so
+existing THEME datasets can be re-analysed with the surrogate calibration, and
+[OpenTag.Studio](https://opentag.studio) can play, for `tpattern`, the role SOF-CODER
+plays for THEME.
 
 ## Installation
 
@@ -217,9 +259,9 @@ pip install -e .[test]
 pytest -q
 ```
 
-Both the synthetic ground-truth tests and the THEME reproduction tests run
-everywhere — the latter check the detector still reproduces THEME's published
-occurrence counts to the exact N.
+Both the synthetic ground-truth tests and the reproduction tests run everywhere —
+the latter check the detector still reproduces the occurrence counts published for
+the reference datasets to the exact N.
 
 ## Citation
 
@@ -233,11 +275,22 @@ https://doi.org/10.5281/zenodo.21397543
 This DOI is permanent and always resolves to the current release. To pin a specific
 version instead, use that release's own DOI, listed on the Zenodo record.
 
-And the method:
+And the method it implements:
 
 Magnusson, M. S. (2000). Discovering hidden time patterns in behavior: T-patterns
 and their detection. *Behavior Research Methods, Instruments, & Computers*, 32(1),
 93–110. https://doi.org/10.3758/BF03200792
+
+The reference software for the method, and its coding front end:
+
+Magnusson, M. S. (2019). T-pattern detection and analysis (TPA) with THEME: A mixed
+methods approach. *Frontiers in Psychology*, 10, 2663.
+https://doi.org/10.3389/fpsyg.2019.02663
+
+Jonsson, G. K., Anguera, M. T., Blanco-Villaseñor, Á., Losada, J. L.,
+Hernández-Mendo, A., Ardá, T., Camerino, O., & Castellano, J. (2006). Hidden
+patterns of play interaction in soccer using SOF-CODER. *Behavior Research Methods*,
+38(3), 372–381. https://doi.org/10.3758/BF03192790
 
 ## License
 
