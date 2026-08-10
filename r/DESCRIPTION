@@ -15,6 +15,7 @@ Description: Detects recurring temporal patterns (T-patterns; Magnusson, 2000
     and you decide whether to follow it.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-GB
 Imports:
     reticulate (>= 1.30)
 Suggests:
