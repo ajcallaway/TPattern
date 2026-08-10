@@ -11,3 +11,9 @@ quickstart_out/
 report_out/
 *_out/
 *.docx
+
+# generated analysis output (never commit)
+tpattern_output/
+**/tpattern_output/
+.Rapp.history
+.Rhistory

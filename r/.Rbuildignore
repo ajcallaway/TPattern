@@ -1,0 +1,10 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^tpattern_output$
+^.*_output$
+^LICENSE\.md$
+^\.github$
+^doc$
+^Meta$
+^\.Rapp\.history$
+^\.Rhistory$

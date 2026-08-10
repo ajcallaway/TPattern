@@ -1,0 +1,28 @@
+Package: tpattern
+Title: Open, Auditable T-Pattern Analysis (R Interface to the 'tpattern' Python Library)
+Version: 0.1.14
+Authors@R:
+    person("Andy", "Callaway", email = "acallaway@bournemouth.ac.uk", role = c("aut", "cre"))
+Description: Detects recurring temporal patterns (T-patterns; Magnusson, 2000
+    <doi:10.3758/BF03200792>) in sequences of timed, labelled events and tests
+    them against chance with correction for repeated testing. This package is a
+    thin, idiomatic R interface to the 'tpattern' Python library, called through
+    'reticulate'. The detection algorithm and statistics live in Python, so
+    results match the Python package, the Colab notebooks and the published
+    paper exactly; there is a single source of truth. A data-driven advisor
+    inspects your data and recommends the analysis settings (which surrogate
+    null, whether to require a genuine lag, which error control), with reasons,
+    and you decide whether to follow it.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports:
+    reticulate (>= 1.30)
+Suggests:
+    testthat (>= 3.0.0)
+SystemRequirements: Python (>= 3.9) with the 'tpattern' package; install it once
+    from R with install_tpattern().
+URL: https://github.com/ajcallaway/TPattern
+BugReports: https://github.com/ajcallaway/TPattern/issues
+RoxygenNote: 7.2.3
+Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3

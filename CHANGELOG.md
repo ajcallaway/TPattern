@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.14 — 2026-08-10
+
+An R interface, and a README that leads with the method.
+
+- **R package (`r/`).** A thin, idiomatic R interface via `reticulate`, so R users
+  (common in psychology and behavioural science) can run the exact same engine —
+  no reimplementation, no drift. `install_tpattern()` sets up Python for them once;
+  `tpattern_analysis()` runs the whole flow in one call; `read_events()` / `advise()`
+  / `calibrate_patterns()` / `results_table()` / `tpattern_report()` map the pipeline
+  step by step; `advise()` pulls the data-driven advisor through in full (printed
+  interpretation, a structured table, and a Methods paragraph); `new_analysis()`
+  writes a heavily-commented starter `my_analysis.R`. Installable now with
+  `remotes::install_github("ajcallaway/TPattern", subdir = "r")`, CRAN-ready.
+- **README** reframed around the published algorithm it implements (critical-interval
+  binomial test on the NX/T baseline; Magnusson, 2000) rather than a comparison to
+  THEME, with SOF-CODER (Jonsson et al., 2006) and `read_sofcoder` interop noted; the
+  Colab notebooks are featured up top; the DOI badge now renders reliably; and a
+  "Using tpattern from R" section points R users at the interface.
+
 ## 0.1.13 — 2026-08-05
 
 Getting started, and templates to adapt.

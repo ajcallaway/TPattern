@@ -6,7 +6,7 @@ behavior: T-patterns and their detection. Behavior Research Methods,
 Instruments, & Computers, 32(1), 93-110.
 """
 
-__version__ = "0.1.13"   # defined before submodule imports (methods.py reads it)
+__version__ = "0.1.14"   # defined before submodule imports (methods.py reads it)
 
 from .io import (Observation, read_observation, read_sample, read_table,
                  read_sofcoder, DataFormatError, check_reference, CHECKS)

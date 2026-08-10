@@ -2,6 +2,7 @@
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ajcallaway/TPattern/blob/main/colab/tpattern_guided_analysis.ipynb)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21397543-1682D4.svg)](https://doi.org/10.5281/zenodo.21397543)
+[![R interface](https://img.shields.io/badge/R-interface-276DC3?logo=r&logoColor=white)](#using-tpattern-from-r)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 `tpattern` detects recurring temporal patterns (T-patterns; Magnusson, 2000) in
@@ -197,6 +198,32 @@ Config()).detect()` returns them directly.
 `group_contrast(observations, group_of)` tests each pattern's occurrence between
 the groups (Fisher's exact test, odds ratio + 95% CI) and feeds `forest_plot` — or run
 `new_analysis(template="two_groups")` for a ready-made script.
+
+## Using tpattern from R
+
+R users (common in psychology and behavioural science) can drive the **same
+engine** from R — the algorithm stays in Python, called through
+[`reticulate`](https://rstudio.github.io/reticulate/), so results match this
+package and the paper exactly. The R interface lives in [`r/`](r/):
+
+```r
+# install.packages("remotes")
+remotes::install_github("ajcallaway/TPattern", subdir = "r")
+
+library(tpattern)
+install_tpattern()        # once: sets up a Python environment R can use
+
+# the whole analysis in one call — prints what the advisor recommends,
+# calibrates every pattern, writes a report, returns the table:
+out <- tpattern_analysis("my_events.csv", time_unit = "ms")
+out$table
+```
+
+Or step by step: `read_events()` → `advise()` (the advisor, pulled through in
+full) → `calibrate_patterns()` → `results_table()` / `tpattern_report()`, with
+`explain()` for any setting and `new_analysis()` to write a commented starter
+script. See [`r/README.md`](r/README.md). (CRAN release to follow, then
+`install.packages("tpattern")`.)
 
 ## The workflow
 
