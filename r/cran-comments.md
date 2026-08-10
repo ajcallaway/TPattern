@@ -6,6 +6,9 @@
 0 errors | 0 warnings | 1 note
 
 * This is a new submission.
+* The CRAN incoming spell-check flags two words in DESCRIPTION: "Colab" (Google
+  Colab, a product name) and "Magnusson" (the surname of the method's author,
+  M. S. Magnusson). Both are spelled correctly.
 * The one local NOTE, "unable to verify current time", is a clock/NTP quirk on the
   build machine and does not occur on CRAN's servers.
 
