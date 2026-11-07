@@ -17,3 +17,6 @@ tpattern_output/
 **/tpattern_output/
 .Rapp.history
 .Rhistory
+
+# run logs (the JSONs are the evidence, the logs are noise)
+results/*.log

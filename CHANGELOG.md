@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.15 — 2026-11-07
+
+Dependence-robust false-discovery control.
+
+- **Benjamini-Yekutieli FDR** added alongside Benjamini-Hochberg. Surrogate p-values
+  for patterns that share events are dependent, where BH assumes independence or
+  positive dependence (PRDS); BY (BH scaled by the harmonic factor c(m) = sum 1/i)
+  controls the false-discovery rate under arbitrary dependence. Every calibrated
+  pattern now carries `fdr_q_by` alongside `fdr_q`, and `result.kept("fdr_by")`
+  returns the dependence-robust survivor set. BH remains the default; BY is the
+  conservative companion to report under dependence.
+- **`validate_synthetic.py`** now reports the false-positive rate **per analysis**
+  (the fraction of independent null datasets with at least one survivor, bounded
+  3/D by the rule of three over D independent datasets) rather than a per-pattern
+  count over dependent within-dataset patterns.
+
 ## 0.1.14 — 2026-08-10
 
 An R interface, and a README that leads with the method.

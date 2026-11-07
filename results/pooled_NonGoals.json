@@ -1,0 +1,39 @@
+{
+  "group": "NonGoals",
+  "B": 2000,
+  "detected": 57,
+  "perlevel": {
+    "1": {
+      "m": 45,
+      "bh": 12,
+      "by": 6,
+      "holm": 0
+    },
+    "2": {
+      "m": 10,
+      "bh": 7,
+      "by": 7,
+      "holm": 2
+    },
+    "3": {
+      "m": 2,
+      "bh": 0,
+      "by": 0,
+      "holm": 0
+    }
+  },
+  "stratified_bh_total": 19,
+  "stratified_by_total": 13,
+  "stratified_holm_total": 2,
+  "pooled_bh": 19,
+  "pooled_by": 11,
+  "headline": {
+    "sig": "(Cross_Incomplete_NoPressure Challenge_Pressure)",
+    "N": 108,
+    "level": 1,
+    "q_bh_perlevel": 0.0037,
+    "q_by_perlevel": 0.0165,
+    "q_bh_pooled": 0.0036,
+    "q_by_pooled": 0.0165
+  }
+}

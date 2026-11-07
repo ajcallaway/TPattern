@@ -1,0 +1,33 @@
+{
+  "group": "DefRecovery",
+  "B": 2000,
+  "detected": 22,
+  "perlevel": {
+    "1": {
+      "m": 21,
+      "bh": 2,
+      "by": 2,
+      "holm": 0
+    },
+    "2": {
+      "m": 1,
+      "bh": 1,
+      "by": 1,
+      "holm": 1
+    }
+  },
+  "stratified_bh_total": 3,
+  "stratified_by_total": 3,
+  "stratified_holm_total": 1,
+  "pooled_bh": 4,
+  "pooled_by": 3,
+  "headline": {
+    "sig": "(Cross_Incomplete_NoPressure Challenge_Pressure)",
+    "N": 29,
+    "level": 1,
+    "q_bh_perlevel": 0.0105,
+    "q_by_perlevel": 0.0383,
+    "q_bh_pooled": 0.0073,
+    "q_by_pooled": 0.0271
+  }
+}

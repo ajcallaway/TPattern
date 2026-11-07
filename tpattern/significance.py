@@ -66,6 +66,7 @@ class Calibrated:
     p_emp_strength: float = 1.0   # empirical p of the analytic strength
     fwer_keep: bool = False   # Holm on p_emp
     fdr_q: float = 1.0        # Benjamini-Hochberg q on p_emp
+    fdr_q_by: float = 1.0     # Benjamini-Yekutieli q (dependence-robust FDR)
 
 
 @dataclass
@@ -81,6 +82,8 @@ class CalibrationResult:
     def kept(self, method: str = "fdr") -> list[Calibrated]:
         if method == "fwer":
             return [c for c in self.real if c.fwer_keep]
+        if method in ("fdr_by", "by"):
+            return [c for c in self.real if c.fdr_q_by <= self.q_target]
         return [c for c in self.real if c.fdr_q <= self.q_target]
 
 
@@ -98,6 +101,20 @@ def _benjamini_hochberg(items, get_p):
         running = min(running, val)
         q[i] = min(1.0, running)
     return {id(items[i]): q[i] for i in range(m)}
+
+
+def _benjamini_yekutieli(items, get_p):
+    """Benjamini-Yekutieli q-values: the BH q scaled by the harmonic factor
+    c(m) = sum_{i=1..m} 1/i, which gives false-discovery-rate control under
+    arbitrary dependence among the p-values (Benjamini & Yekutieli, 2001).
+    Surrogate p-values for patterns that share events are dependent, so this is
+    the dependence-robust companion to the BH q; it is more conservative."""
+    m = len(items)
+    if m == 0:
+        return {}
+    cm = sum(1.0 / i for i in range(1, m + 1))
+    bh = _benjamini_hochberg(items, get_p)
+    return {k: min(1.0, v * cm) for k, v in bh.items()}
 
 
 def _holm_keep(items, get_p, alpha):
@@ -217,9 +234,11 @@ def calibrate(observations, config: Config | None = None, *,
         grp = [c for c in real if c.level == lv]
         keep = _holm_keep(grp, lambda c: c.p_emp, alpha)
         qmap = _benjamini_hochberg(grp, lambda c: c.p_emp)
+        bymap = _benjamini_yekutieli(grp, lambda c: c.p_emp)
         for c in grp:
             c.fwer_keep = id(c) in keep
             c.fdr_q = qmap[id(c)]
+            c.fdr_q_by = bymap[id(c)]
 
     return CalibrationResult(real=real, surrogate_counts=surrogate_counts,
                              B=B, alpha=alpha, q_target=q_target, null=null,

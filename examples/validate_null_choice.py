@@ -24,13 +24,21 @@ World Cup result is not an artefact of the choice.
 Run:  python examples/validate_null_choice.py       (~3-5 min at B=200)
 """
 
+import argparse
+import json
 from pathlib import Path
 
 import numpy as np
 
 from tpattern import Config, Observation, calibrate, read_table
 
-B = 200
+_ap = argparse.ArgumentParser(description=__doc__)
+_ap.add_argument("--B", type=int, default=200,
+                 help="surrogates per calibration (paper used 200; pass 2000 to match "
+                      "the confirmatory real-data resolution)")
+_args = _ap.parse_args()
+B = _args.B
+RESULTS = {}
 DATA = Path(__file__).resolve().parents[1] / "data"
 
 
@@ -65,6 +73,7 @@ def main():
         for null in ("profile", "shuffle"):
             det, surv = survivors(synth(centres), null)
             print(f"   {label:11s} {null:8s}: {det:4d} detected, {surv:4d} survive FDR")
+            RESULTS[f"{label}_{null}"] = {"detected": det, "survivors": surv, "B": B}
 
     print("\n2. REAL goals — is the headline pattern robust to the null choice?")
     goals = read_table(DATA / "worldcup_goals.csv",
@@ -81,6 +90,8 @@ def main():
                and "Shot_Goal" in c.pattern.signature()]
         flag = "cross->goal survives" if tgt else "cross->goal absent"
         print(f"   null={null:8s}: {len(res.kept('fdr'))} survivors | {flag}")
+        RESULTS[f"goals_{null}"] = {"survivors": len(res.kept("fdr")),
+                                    "cross_to_goal_survives": bool(tgt), "B": B}
 
     print("\nInterpretation: the profile null is clean on separated data and only "
           "inflates when types are co-located; the real goals data are separated "
@@ -90,3 +101,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    out = Path(__file__).resolve().parents[1] / "results" / f"null_choice_B{B}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    json.dump(RESULTS, open(out, "w"), indent=2)
+    print(f"\nSaved {out}")

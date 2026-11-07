@@ -1,0 +1,236 @@
+{
+  "Goals_B2000": {
+    "B": 2000,
+    "detected": 12,
+    "n_bh": 1,
+    "n_by": 1,
+    "n_holm": 0,
+    "survivors": [
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Shot_Goal_Pressure)",
+        "N": 14,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.005997001499250375,
+        "q_by": 0.018609959089719207,
+        "holm": false
+      }
+    ]
+  },
+  "NonGoals_B2000": {
+    "B": 2000,
+    "detected": 57,
+    "n_bh": 19,
+    "n_by": 13,
+    "n_holm": 2,
+    "survivors": [
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Challenge_Pressure)",
+        "N": 108,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.003748125937031484,
+        "q_by": 0.01647281902380555,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Shot_OffTarget_Pressure)",
+        "N": 106,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.003748125937031484,
+        "q_by": 0.01647281902380555,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_Pressure Shot_OffTarget_Pressure)",
+        "N": 25,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.003748125937031484,
+        "q_by": 0.01647281902380555,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Shot_Saved_Pressure)",
+        "N": 21,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.003748125937031484,
+        "q_by": 0.01647281902380555,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Shot_OffTarget_NoPressure)",
+        "N": 17,
+        "level": 1,
+        "p_emp": 0.0024987506246876563,
+        "q_bh": 0.014055472263868067,
+        "q_by": 0.06177307133927083,
+        "holm": false
+      },
+      {
+        "pattern": "(Pass_Complete_LooseBall Cross_Incomplete_LooseBall)",
+        "N": 14,
+        "level": 1,
+        "p_emp": 0.0029985007496251873,
+        "q_bh": 0.014992503748125937,
+        "q_by": 0.06589127609522222,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_LooseBall Shot_OffTarget_Pressure)",
+        "N": 12,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.003748125937031484,
+        "q_by": 0.01647281902380555,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Shot_Blocked_Pressure)",
+        "N": 12,
+        "level": 1,
+        "p_emp": 0.0024987506246876563,
+        "q_bh": 0.014055472263868067,
+        "q_by": 0.06177307133927083,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_LooseBall Challenge_Pressure)",
+        "N": 11,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.003748125937031484,
+        "q_by": 0.01647281902380555,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_LooseBall Shot_OffTarget_NoPressure)",
+        "N": 9,
+        "level": 1,
+        "p_emp": 0.00399800099950025,
+        "q_bh": 0.017991004497751123,
+        "q_by": 0.07906953131426665,
+        "holm": false
+      },
+      {
+        "pattern": "((Pass_Complete_LooseBall Cross_Incomplete_LooseBall) Shot_OffTarget_Pressure)",
+        "N": 6,
+        "level": 2,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.002498750624687656,
+        "q_by": 0.0073187612542934865,
+        "holm": true
+      },
+      {
+        "pattern": "(Pass_Complete_LooseBall (Pass_Complete_LooseBall Cross_Incomplete_LooseBall))",
+        "N": 6,
+        "level": 2,
+        "p_emp": 0.0009995002498750624,
+        "q_bh": 0.003331667499583541,
+        "q_by": 0.009758348339057983,
+        "holm": false
+      },
+      {
+        "pattern": "((Pass_Complete_LooseBall Cross_Incomplete_LooseBall) Challenge_Pressure)",
+        "N": 5,
+        "level": 2,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.002498750624687656,
+        "q_by": 0.0073187612542934865,
+        "holm": true
+      },
+      {
+        "pattern": "(Pass_Complete_Anticipation Shot_OffTarget_NoPressure)",
+        "N": 4,
+        "level": 1,
+        "p_emp": 0.004997501249375313,
+        "q_bh": 0.020444323292899007,
+        "q_by": 0.08985174012984848,
+        "holm": false
+      },
+      {
+        "pattern": "(Pass_Complete_Pressure (Cross_Incomplete_Pressure Shot_OffTarget_Pressure))",
+        "N": 4,
+        "level": 2,
+        "p_emp": 0.001999000499750125,
+        "q_bh": 0.00399800099950025,
+        "q_by": 0.01171001800686958,
+        "holm": false
+      },
+      {
+        "pattern": "(Challenge_Pressure Shot_Saved_Anticipation)",
+        "N": 3,
+        "level": 1,
+        "p_emp": 0.012993503248375811,
+        "q_bh": 0.04872563718140929,
+        "q_by": 0.2141466473094722,
+        "holm": false
+      },
+      {
+        "pattern": "(Pass_Complete_Anticipation (Pass_Complete_Anticipation Pass_Complete_Pressure))",
+        "N": 3,
+        "level": 2,
+        "p_emp": 0.0014992503748125937,
+        "q_bh": 0.0037481259370314842,
+        "q_by": 0.010978141881440232,
+        "holm": false
+      },
+      {
+        "pattern": "(Pass_Complete_LooseBall (Cross_Incomplete_LooseBall Shot_OffTarget_NoPressure))",
+        "N": 3,
+        "level": 2,
+        "p_emp": 0.0029985007496251873,
+        "q_bh": 0.004997501249375313,
+        "q_by": 0.014637522508586976,
+        "holm": false
+      },
+      {
+        "pattern": "(Pass_Complete_NoPressure (Cross_Incomplete_Pressure Shot_OffTarget_Pressure))",
+        "N": 3,
+        "level": 2,
+        "p_emp": 0.0069965017491254375,
+        "q_bh": 0.009995002498750625,
+        "q_by": 0.029275045017173953,
+        "holm": false
+      }
+    ]
+  },
+  "DefRecovery_B2000": {
+    "B": 2000,
+    "detected": 22,
+    "n_bh": 3,
+    "n_by": 3,
+    "n_holm": 1,
+    "survivors": [
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Challenge_Pressure)",
+        "N": 29,
+        "level": 1,
+        "p_emp": 0.0004997501249375312,
+        "q_bh": 0.010494752623688156,
+        "q_by": 0.038257137831093115,
+        "holm": false
+      },
+      {
+        "pattern": "(Cross_Incomplete_NoPressure Shot_Saved_Pressure)",
+        "N": 26,
+        "level": 1,
+        "p_emp": 0.0009995002498750624,
+        "q_bh": 0.010494752623688156,
+        "q_by": 0.038257137831093115,
+        "holm": false
+      },
+      {
+        "pattern": "(Pass_Complete_Anticipation (Pass_Complete_Anticipation Pass_Complete_Pressure))",
+        "N": 3,
+        "level": 2,
+        "p_emp": 0.0009995002498750624,
+        "q_bh": 0.0009995002498750624,
+        "q_by": 0.0009995002498750624,
+        "holm": true
+      }
+    ]
+  }
+}

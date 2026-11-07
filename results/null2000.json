@@ -1,0 +1,29 @@
+{
+  "B": 2000,
+  "cells": {
+    "separated_profile": {
+      "detected": 83,
+      "survive_fdr": 0
+    },
+    "separated_shuffle": {
+      "detected": 83,
+      "survive_fdr": 83
+    },
+    "separated_rotation": {
+      "detected": 83,
+      "survive_fdr": 83
+    },
+    "colocated_profile": {
+      "detected": 210,
+      "survive_fdr": 22
+    },
+    "colocated_shuffle": {
+      "detected": 210,
+      "survive_fdr": 24
+    },
+    "colocated_rotation": {
+      "detected": 210,
+      "survive_fdr": 208
+    }
+  }
+}

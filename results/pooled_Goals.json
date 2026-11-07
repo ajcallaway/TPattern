@@ -1,0 +1,27 @@
+{
+  "group": "Goals",
+  "B": 2000,
+  "detected": 12,
+  "perlevel": {
+    "1": {
+      "m": 12,
+      "bh": 1,
+      "by": 1,
+      "holm": 0
+    }
+  },
+  "stratified_bh_total": 1,
+  "stratified_by_total": 1,
+  "stratified_holm_total": 0,
+  "pooled_bh": 1,
+  "pooled_by": 1,
+  "headline": {
+    "sig": "(Cross_Incomplete_NoPressure Shot_Goal_Pressure)",
+    "N": 14,
+    "level": 1,
+    "q_bh_perlevel": 0.006,
+    "q_by_perlevel": 0.0186,
+    "q_bh_pooled": 0.006,
+    "q_by_pooled": 0.0186
+  }
+}

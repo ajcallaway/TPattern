@@ -1,0 +1,37 @@
+{
+  "SEPARATED_profile": {
+    "detected": 83,
+    "survivors": 0,
+    "B": 2000
+  },
+  "SEPARATED_shuffle": {
+    "detected": 83,
+    "survivors": 83,
+    "B": 2000
+  },
+  "CO-LOCATED_profile": {
+    "detected": 210,
+    "survivors": 22,
+    "B": 2000
+  },
+  "CO-LOCATED_shuffle": {
+    "detected": 210,
+    "survivors": 24,
+    "B": 2000
+  },
+  "goals_profile": {
+    "survivors": 1,
+    "cross_to_goal_survives": true,
+    "B": 2000
+  },
+  "goals_shuffle": {
+    "survivors": 3,
+    "cross_to_goal_survives": true,
+    "B": 2000
+  },
+  "goals_rotation": {
+    "survivors": 3,
+    "cross_to_goal_survives": true,
+    "B": 2000
+  }
+}
