@@ -239,10 +239,13 @@ script. See [`r/README.md`](r/README.md). (CRAN release to follow, then
 ## The workflow
 
 ```
-   tag events            export             analyse                    report
- (OpenTag / Sportscode) ──────▶ standard ──▶ tpattern ──▶ tables · figures · dendrograms
-                                 table         (detect · validate ·
-                                               calibrate)
+      tag                export                 analyse                  report
+┌─────────────┐    ┌────────────────┐    ┌───────────────────┐    ┌──────────────────┐
+│ your events │    │ standard event │    │      tpattern     │    │ tables · figures │
+│  OpenTag /  │ ─▶ │     table      │ ─▶ │ detect · validate │ ─▶ │  dendrograms ·   │
+│  Sportscode │    │  (SCHEMA.md)   │    │    · calibrate    │    │   Methods text   │
+└─────────────┘    └────────────────┘    └───────────────────┘    └──────────────────┘
+
 ```
 
 1. **Tag** your video/events in any coding tool.
