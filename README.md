@@ -28,8 +28,8 @@ No data of your own yet? Point it at [`data/worldcup_goals.csv`](data/worldcup_g
 
 Three notebooks (all in [`colab/`](colab/)):
 
-- [**Guided analysis**](https://colab.research.google.com/github/ajcallaway/TPattern/blob/main/colab/tpattern_guided_analysis.ipynb) — **recommended.** Installs the latest `tpattern` and opens the guided panel. This is the one the badge above opens.
-- **Guided analysis (offline)** — the package is bundled inside the notebook (a snapshot), so it runs where you can't install from GitHub. Open `colab/tpattern_guided_analysis_offline.ipynb` via **File → Upload notebook**.
+- [**Guided analysis**](https://colab.research.google.com/github/ajcallaway/TPattern/blob/main/colab/tpattern_guided_analysis.ipynb) — **recommended.** Installs the latest `tpattern` from PyPI and opens the guided panel. This is the one the badge above opens.
+- **Guided analysis (offline)** — the package source is bundled inside the notebook itself, so it runs standalone with nothing to install and nothing to download: use it on locked-down machines, behind restrictive networks, or anywhere `pip` is unavailable. The bundle is a snapshot of the source at the last release, so pin your citation to the version it reports. Open `colab/tpattern_guided_analysis_offline.ipynb` via **File → Upload notebook**.
 - **Worked example** — the companion to the tutorial paper. Runs the load → inspect → recommend → calibrate → report walk-through on the shipped World Cup goal sequences, cell by cell, so you can follow the whole analysis and then swap in your own data (`colab/tpattern_worked_example.ipynb`).
 
 ### 🐍 As a Python library
@@ -87,8 +87,9 @@ print(explain("fdr_q"))      # what an output column means
   of silently dropping rows. Each check has a stable code (Appendix A of the tutorial; also
   [`PARAMETERS.md`](PARAMETERS.md)).
 - **A proper chance model.** Every pattern is tested against a surrogate null, with p-values
-  corrected for repeated testing (Benjamini–Hochberg FDR for screening, Holm family-wise for
-  confirmatory claims), stratified by hierarchy level.
+  corrected for repeated testing (Benjamini–Hochberg FDR for screening,
+  Benjamini–Yekutieli for dependence-robust FDR, Holm family-wise for confirmatory
+  claims), stratified by hierarchy level.
 - **Temporal reporting.** Beyond *which* patterns are real, the output says *when*: each
   pattern's occurrence timing (median lag and spread) is reported by default — on the
   dendrogram, in the table, and in the plain-English verdict — for every pattern.
@@ -129,8 +130,9 @@ On top of the published detection, `tpattern` adds what the method has historica
 lacked:
 
 - **a proper chance model** — every detected pattern is tested against a surrogate
-  null, with p-values **corrected for repeated testing** (Benjamini–Hochberg FDR for
-  screening, Holm family-wise for confirmatory claims), stratified by level;
+  null, with p-values **corrected for repeated testing** (Benjamini–Hochberg FDR
+  for screening, Benjamini–Yekutieli where the p-values are dependent, Holm
+  family-wise for confirmatory claims), stratified by level;
 - **explicit concurrency handling** — events sharing a timestamp are reported as
   co-occurrence rather than sequence;
 - **clear reporting** — tidy tables, effect sizes with confidence intervals,
@@ -154,11 +156,11 @@ instead (for development or to run the reproduction scripts and shipped data):
 
 ```bash
 git clone https://github.com/ajcallaway/TPattern.git
-cd tpattern
+cd TPattern
 pip install -e .
 ```
 
-Requires Python ≥ 3.9 (depends on numpy, scipy, matplotlib).
+Requires Python ≥ 3.10 (depends on numpy, scipy, matplotlib).
 
 ## Quickstart
 
@@ -282,7 +284,8 @@ survive the surrogate null. All seeded and deterministic. See
 
 - [`SCHEMA.md`](SCHEMA.md) — the input data structure (what your export must contain).
 - [`CODING_GUIDE.md`](CODING_GUIDE.md) — how to set up a coding window to produce it.
-- [`data/`](data/) — the derived World Cup sequences, in the canonical format.
+- [`data/`](data/) — the derived World Cup sequences, in the canonical format, plus
+  `data/theme_inputs/`, the THEME Edu v6 observation files behind the fidelity comparison.
 - [`examples/`](examples/) — a runnable quickstart, the reproduction script, and the
   `my_analysis.py` / `my_group_comparison.py` / `my_null_choice.py` starter templates.
 - [`PARAMETERS.md`](PARAMETERS.md) — every setting and output column, with range, recommended
