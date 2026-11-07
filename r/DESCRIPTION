@@ -1,6 +1,6 @@
 Package: tpattern
 Title: Open, Auditable T-Pattern Analysis (R Interface to the 'tpattern' Python Library)
-Version: 0.1.15
+Version: 0.1.16
 Authors@R:
     person("Andy", "Callaway", email = "acallaway@bournemouth.ac.uk", role = c("aut", "cre"))
 Description: Detects recurring temporal patterns (T-patterns; Magnusson, 2000

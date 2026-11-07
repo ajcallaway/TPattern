@@ -14,6 +14,7 @@ python examples/reproduce_worldcup.py
 | `worldcup_goals.csv` | 163 | shot-ending sequences that ended in a goal |
 | `worldcup_nongoals.csv` | 1,299 | all non-scoring shot-ending sequences |
 | `worldcup_defensive_recovery.csv` | 676 | saved-or-blocked shots (a subgroup of the non-goals) |
+| `theme_inputs/` | 2,138 | the same sequences in THEME Edu v6's per-sequence layout, deposited so a THEME licence holder can repeat the fidelity comparison (see `theme_inputs/README_THEME_inputs.md`) |
 
 ## Format
 

@@ -1,0 +1,21 @@
+action
+ ballcarry_nopressure
+ ballcarry_pressure
+ challenge_pressure
+ cross_incomplete_anticipation
+ cross_incomplete_looseball
+ cross_incomplete_nopressure
+ cross_incomplete_pressure
+ interception
+ pass_complete_anticipation
+ pass_complete_looseball
+ pass_complete_nopressure
+ pass_complete_pressure
+ recovery_nopressure
+ shot_goal_anticipation
+ shot_goal_looseball
+ shot_goal_nopressure
+ shot_goal_pressure
+ touch_nopressure
+ touch_pressure
+

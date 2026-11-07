@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.16 — 2026-11-07
+
+The THEME comparison inputs, archived.
+
+- **`data/theme_inputs/`** adds the THEME Edu v6 observation files used for the
+  fidelity comparison (`THEME_Edu_v6_inputs.zip`, 2,144 files), the settings THEME
+  was run under (`vvt_reference.vvt`) and a README describing both. They are the
+  same derived World Cup sequences already in `data/`, in THEME's per-sequence
+  layout; `examples/verify_theme_inputs.py` confirms the two agree exactly across
+  all 2,138 sequences. Depositing them here means a THEME licence holder can repeat
+  the comparison independently.
+- **Python 3.9 support dropped** (`requires-python = ">=3.10"`). 3.9 reached end of
+  life in October 2025 and `ubuntu-latest` no longer provides it, so it was no
+  longer being tested; the matrix is now 3.10, 3.11 and 3.12, and `checkout` and
+  `setup-python` are bumped to v7.
+- **No analysis-code changes.** Results produced with 0.1.15 reproduce identically.
+
 ## 0.1.15 — 2026-11-07
 
 Dependence-robust false-discovery control.

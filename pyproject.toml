@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tpattern"
-version = "0.1.15"
+version = "0.1.16"
 description = "Open, auditable temporal & sequential pattern analysis (T-patterns) for sport and behaviour"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -17,7 +17,6 @@ keywords = ["t-pattern", "THEME", "temporal", "sequence", "sport", "behaviour", 
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
